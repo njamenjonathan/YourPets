@@ -1,0 +1,108 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+
+@layer base {
+  :root {
+    --color-primary: #002045;
+    --color-primary-container: #1a365d;
+    --color-on-primary: #ffffff;
+    --color-secondary: #006d3c;
+    --color-secondary-container: #85f6ad;
+    --color-on-secondary-fixed-variant: #00522c;
+    --color-tertiary: #735c00;
+    --color-tertiary-fixed: #ffe088;
+    --color-background: #f9f9f9;
+    --color-surface: #f9f9f9;
+    --color-surface-lowest: #ffffff;
+    --color-surface-low: #f3f3f3;
+    --color-surface-high: #e8e8e8;
+    --color-on-surface: #1a1c1c;
+    --color-on-surface-variant: #43474e;
+    --color-outline: #74777f;
+    --color-outline-variant: #c4c6cf;
+  }
+
+  .dark {
+    --color-primary: #86a0cd;
+    --color-primary-container: #002045;
+    --color-on-primary: #001b3c;
+    --color-secondary: #6bdc96;
+    --color-secondary-container: #00522c;
+    --color-on-secondary-fixed-variant: #88f9b0;
+    --color-tertiary: #e9c349;
+    --color-tertiary-fixed: #574500;
+    --color-background: #121417;
+    --color-surface: #1a1c1e;
+    --color-surface-lowest: #1f2226;
+    --color-surface-low: #282c31;
+    --color-surface-high: #32373e;
+    --color-on-surface: #f0f1f1;
+    --color-on-surface-variant: #c4c6cf;
+    --color-outline: #8e9199;
+    --color-outline-variant: #43474e;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-on-surface);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, .font-serif-display {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+/* Custom luxury gradients and card elevations */
+.gold-gradient {
+  background: linear-gradient(135deg, #f3e5ab 0%, #d4af37 100%);
+}
+
+.gold-badge {
+  background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+  border: 1px solid #d4af37;
+  color: #574500;
+}
+
+.card-elevation {
+  box-shadow: 0 4px 20px rgba(0, 32, 69, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-elevation:hover {
+  box-shadow: 0 12px 36px rgba(0, 32, 69, 0.12);
+  transform: translateY(-4px);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.dark .glass-panel {
+  background: rgba(26, 28, 30, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c4c6cf;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #74777f;
+}

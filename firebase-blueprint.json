@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User profile records",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth user ID" },
+        "displayName": { "type": "string", "description": "User display name" },
+        "email": { "type": "string", "description": "User email address" },
+        "photoURL": { "type": "string", "description": "Profile picture URL" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of account creation" }
+      },
+      "required": ["uid", "email"]
+    },
+    "orders": {
+      "title": "Orders",
+      "description": "Pet reservation orders placed by users",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User ID who placed the order" },
+        "petId": { "type": "string", "description": "ID of the reserved pet" },
+        "customerName": { "type": "string", "description": "Name of the customer" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "deliveryAddress": { "type": "string", "description": "Full street address" },
+        "cityStateZip": { "type": "string", "description": "City state zip" },
+        "deliveryCost": { "type": "number", "description": "Delivery fee" },
+        "totalAmount": { "type": "number", "description": "Total order amount in USD" },
+        "paymentMethod": { "type": "string", "description": "Payment method chosen" },
+        "status": { "type": "string", "description": "Order processing status" },
+        "createdAt": { "type": "string", "description": "ISO timestamp" }
+      },
+      "required": ["userId", "petId", "totalAmount"]
+    },
+    "wishlist": {
+      "title": "Wishlist",
+      "description": "Saved favorite pet IDs for each user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User ID" },
+        "petIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Array of saved pet IDs"
+        },
+        "updatedAt": { "type": "string", "description": "ISO timestamp" }
+      },
+      "required": ["userId", "petIds"]
+    }
+  }
+}

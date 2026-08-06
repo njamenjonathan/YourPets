@@ -1,0 +1,6 @@
+{
+  "name": "YourPets",
+  "description": "Luxury, ethical e-commerce platform for healthy puppies and kittens with full medical transparency, AI pet matching, and secure reservation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
