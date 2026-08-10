@@ -25,8 +25,8 @@ export const ReserveModal: React.FC = () => {
     e.preventDefault();
     const createdOrder = placeOrder({
       customerName: customerName || 'Valued Client',
-      deliveryAddress: deliveryAddress || '123 Luxury Way, Beverly Hills, CA',
-      phone: phone || '+1 (310) 555-0192',
+      deliveryAddress: deliveryAddress || '',
+      phone: phone || '',
       paymentMethod: 'Refundable Reservation Deposit ($50)',
       depositPaid: true,
       depositAmount: depositAmount
@@ -70,7 +70,7 @@ export const ReserveModal: React.FC = () => {
                 required
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="e.g. Lady Eleanor Vance"
+                placeholder=""
                 className="w-full p-2.5 rounded-xl border border-outline-variant bg-white dark:bg-[#282c31] text-on-surface"
               />
             </div>
@@ -83,7 +83,7 @@ export const ReserveModal: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@domain.com"
+                  placeholder=""
                   className="w-full p-2.5 rounded-xl border border-outline-variant bg-white dark:bg-[#282c31] text-on-surface"
                 />
               </div>
@@ -94,7 +94,7 @@ export const ReserveModal: React.FC = () => {
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (555) 000-0000"
+                  placeholder=""
                   className="w-full p-2.5 rounded-xl border border-outline-variant bg-white dark:bg-[#282c31] text-on-surface"
                 />
               </div>
@@ -107,7 +107,7 @@ export const ReserveModal: React.FC = () => {
                 required
                 value={deliveryAddress}
                 onChange={(e) => setDeliveryAddress(e.target.value)}
-                placeholder="e.g. Beverly Hills, CA"
+                placeholder=""
                 className="w-full p-2.5 rounded-xl border border-outline-variant bg-white dark:bg-[#282c31] text-on-surface"
               />
             </div>

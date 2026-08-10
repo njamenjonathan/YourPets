@@ -106,64 +106,6 @@ export const SAMPLE_PETS: Pet[] = [
       '90-Day Health Guarantee'
     ]
   },
-  // 1b. Golden Retriever - Cooper (Second Golden Retriever Puppy)
-  {
-    id: 'pet-1b',
-    name: 'Cooper',
-    species: 'dog',
-    breed: 'Golden Retriever',
-    breedType: 'standard',
-    generation: 'AKC Master Lineage',
-    badgeText: 'New Arrival',
-    ageMonths: 2,
-    gender: 'Male',
-    color: 'Golden Amber',
-    weightKg: 2.3,
-    heightCm: 17,
-    birthDate: '2026-06-05',
-    priceUSD: 240,
-    status: 'available',
-    rating: 4.95,
-    reviewsCount: 15,
-    isNewArrival: true,
-    locationCityState: 'Beverly Hills, CA',
-    breeder: SAMPLE_BREEDERS[0],
-    medicalInfo: {
-      overallHealth: 'Excellent',
-      vetExamPassed: true,
-      vaccinated: true,
-      vaccinatedDates: ['2026-07-05', '2026-07-25'],
-      dewormed: true,
-      microchipped: true,
-      healthCertIncluded: true,
-      pedigreeCertIncluded: true,
-      dnaScreeningPassed: true,
-      lastVetCheckDate: '2026-08-02',
-      nextVaccinationDue: '2026-09-18',
-      healthGuaranteeDays: 90
-    },
-    personalityTraits: ['Playful', 'Cuddly', 'Eager to Please', 'Good with Children', 'Social'],
-    breedDetails: {
-      history: 'Famous for intelligence, warmth, and loyal devotion to family members.',
-      lifespan: '10 - 12 years',
-      exerciseNeeds: 'High',
-      groomingRequirements: 'Moderate',
-      climateSuitability: 'Adaptable',
-      temperament: ['Gentle', 'Friendly', 'Intelligent'],
-      commonHealthConcerns: ['Hip & Elbow Certified Clear'],
-      trainingDifficulty: 'Easy',
-      recommendedHome: 'Family homes and active owners.'
-    },
-    images: [
-      'https://commons.wikimedia.org/wiki/Special:FilePath/Golden%20Retriever%20puppy%20%283813393%29.jpg?width=1200'
-    ],
-    purchaseIncludes: [
-      'AKC Pedigree Papers',
-      'Full Vet Exam Clearance',
-      'Puppy Collar & Starter Kibble',
-      '90-Day Guarantee'
-    ]
-  },
   // 2. F1 Savannah Cat - Aura
   {
     id: 'pet-2',
@@ -222,64 +164,6 @@ export const SAMPLE_PETS: Pet[] = [
       '90-Day VIP Health Guarantee'
     ]
   },
-  // 2b. F1 Savannah Cat - Zelda (Second Savannah Kitten)
-  {
-    id: 'pet-2b',
-    name: 'Zelda',
-    species: 'cat',
-    breed: 'Savannah Cat',
-    breedType: 'rare',
-    generation: 'F2 Generation Baby',
-    badgeText: 'Rare Exotic',
-    ageMonths: 2,
-    gender: 'Female',
-    color: 'Silver Serval Rosettes',
-    weightKg: 1.1,
-    heightCm: 17,
-    birthDate: '2026-06-12',
-    priceUSD: 280,
-    status: 'available',
-    rating: 4.95,
-    reviewsCount: 11,
-    isFeatured: true,
-    locationCityState: 'Aspen, CO',
-    breeder: SAMPLE_BREEDERS[1],
-    medicalInfo: {
-      overallHealth: 'Excellent',
-      vetExamPassed: true,
-      vaccinated: true,
-      vaccinatedDates: ['2026-07-12'],
-      dewormed: true,
-      microchipped: true,
-      healthCertIncluded: true,
-      pedigreeCertIncluded: true,
-      dnaScreeningPassed: true,
-      lastVetCheckDate: '2026-08-01',
-      nextVaccinationDue: '2026-09-08',
-      healthGuaranteeDays: 90
-    },
-    personalityTraits: ['Curious', 'Playful', 'Hypoallergenic', 'Smart', 'Athletic'],
-    breedDetails: {
-      history: 'Graceful wild rosettes and exotic tall ears combined with sweet housecat affection.',
-      lifespan: '15 - 20 years',
-      exerciseNeeds: 'High',
-      groomingRequirements: 'Low',
-      climateSuitability: 'Indoor',
-      temperament: ['Active', 'Intelligent', 'Loving'],
-      commonHealthConcerns: ['Genetic Screening Passed'],
-      trainingDifficulty: 'Easy',
-      recommendedHome: 'Attentive, active owners.'
-    },
-    images: [
-      'https://commons.wikimedia.org/wiki/Special:FilePath/Savannah%20Kittens%20F2b%201week%20old.jpg?width=1200'
-    ],
-    purchaseIncludes: [
-      'TICA Registration Papers',
-      'Veterinary Health Certificate',
-      'Kitten Play Tunnel & Toys',
-      '90-Day Guarantee'
-    ]
-  },
   // 3. French Bulldog - Milo
   {
     id: 'pet-3',
@@ -335,64 +219,6 @@ export const SAMPLE_PETS: Pet[] = [
       'AKC Pedigree Papers',
       'Full Vet Exam Clearance',
       'Microchip & Starter Harness',
-      '90-Day Guarantee'
-    ]
-  },
-  // 3b. French Bulldog - Pierre (Second Frenchie Puppy)
-  {
-    id: 'pet-3b',
-    name: 'Pierre',
-    species: 'dog',
-    breed: 'French Bulldog',
-    breedType: 'rare',
-    generation: 'Isabella Blue Lineage',
-    badgeText: 'Rare Colorway',
-    ageMonths: 2,
-    gender: 'Male',
-    color: 'Platinum Blue Brindle',
-    weightKg: 1.3,
-    heightCm: 13,
-    birthDate: '2026-06-10',
-    priceUSD: 290,
-    status: 'available',
-    rating: 5.0,
-    reviewsCount: 22,
-    isFeatured: true,
-    locationCityState: 'Beverly Hills, CA',
-    breeder: SAMPLE_BREEDERS[0],
-    medicalInfo: {
-      overallHealth: 'Excellent',
-      vetExamPassed: true,
-      vaccinated: true,
-      vaccinatedDates: ['2026-07-10', '2026-07-28'],
-      dewormed: true,
-      microchipped: true,
-      healthCertIncluded: true,
-      pedigreeCertIncluded: true,
-      dnaScreeningPassed: true,
-      lastVetCheckDate: '2026-08-01',
-      nextVaccinationDue: '2026-09-05',
-      healthGuaranteeDays: 90
-    },
-    personalityTraits: ['Cuddly', 'Calm', 'Apartment Friendly', 'Gentle', 'Loyal'],
-    breedDetails: {
-      history: 'Ultra-chunky compact Frenchie with soft coat and quiet, loving indoor disposition.',
-      lifespan: '10 - 12 years',
-      exerciseNeeds: 'Low',
-      groomingRequirements: 'Low',
-      climateSuitability: 'Indoor',
-      temperament: ['Comical', 'Sweet', 'Loving'],
-      commonHealthConcerns: ['Nostril & Airway Verified Clear'],
-      trainingDifficulty: 'Easy',
-      recommendedHome: 'Apartment and city living.'
-    },
-    images: [
-      'https://commons.wikimedia.org/wiki/Special:FilePath/Merle%20French%20Bulldog%20puppy.jpg?width=1200'
-    ],
-    purchaseIncludes: [
-      'AKC Platinum Pedigree Registration',
-      'Vet Examination Passport',
-      'Soft Memory Foam Bed',
       '90-Day Guarantee'
     ]
   },
@@ -454,64 +280,6 @@ export const SAMPLE_PETS: Pet[] = [
       '60-Day Health Guarantee'
     ]
   },
-  // 4b. Persian Kitten - Pearl (Second Persian Kitten)
-  {
-    id: 'pet-4b',
-    name: 'Pearl',
-    species: 'cat',
-    breed: 'Persian Kitten',
-    breedType: 'standard',
-    generation: 'Doll Face Persian Baby',
-    badgeText: 'Fluffy Angel',
-    ageMonths: 1,
-    gender: 'Female',
-    color: 'Silver Tabby Silk',
-    weightKg: 0.5,
-    heightCm: 10,
-    birthDate: '2026-06-25',
-    priceUSD: 195,
-    status: 'available',
-    rating: 4.9,
-    reviewsCount: 14,
-    isNewArrival: true,
-    locationCityState: 'Beverly Hills, CA',
-    breeder: SAMPLE_BREEDERS[0],
-    medicalInfo: {
-      overallHealth: 'Excellent',
-      vetExamPassed: true,
-      vaccinated: true,
-      vaccinatedDates: ['2026-07-25'],
-      dewormed: true,
-      microchipped: true,
-      healthCertIncluded: true,
-      pedigreeCertIncluded: true,
-      dnaScreeningPassed: true,
-      lastVetCheckDate: '2026-08-01',
-      nextVaccinationDue: '2026-09-05',
-      healthGuaranteeDays: 60
-    },
-    personalityTraits: ['Sweet', 'Quiet', 'Lap Cat', 'Cuddly', 'Gentle'],
-    breedDetails: {
-      history: 'Plush coat and affectionate lap-cat disposition for calm indoor relaxing.',
-      lifespan: '12 - 17 years',
-      exerciseNeeds: 'Low',
-      groomingRequirements: 'High',
-      climateSuitability: 'Indoor',
-      temperament: ['Peaceful', 'Loving', 'Gentle'],
-      commonHealthConcerns: ['PKD Clear'],
-      trainingDifficulty: 'Easy',
-      recommendedHome: 'Apartments and quiet homes.'
-    },
-    images: [
-      'https://commons.wikimedia.org/wiki/Special:FilePath/Persian%20kitten%20-%20blue.jpg?width=1200'
-    ],
-    purchaseIncludes: [
-      'TICA Pedigree Papers',
-      'Silk Coat Grooming Brush',
-      'Kitten Starter Package',
-      '60-Day Guarantee'
-    ]
-  },
   // 5. Samoyed - Yuki
   {
     id: 'pet-7',
@@ -567,64 +335,6 @@ export const SAMPLE_PETS: Pet[] = [
       'AKC Registration Papers',
       'De-shedding Comb & Fluff Brush',
       'Puppy Care Starter Kit',
-      '90-Day Guarantee'
-    ]
-  },
-  // 5b. Samoyed - Ghost (Second Samoyed Puppy)
-  {
-    id: 'pet-7b',
-    name: 'Ghost',
-    species: 'dog',
-    breed: 'Samoyed',
-    breedType: 'standard',
-    generation: 'AKC Cloud Lineage',
-    badgeText: 'Fluffy Cloud',
-    ageMonths: 2,
-    gender: 'Female',
-    color: 'Icy White',
-    weightKg: 2.0,
-    heightCm: 16,
-    birthDate: '2026-06-15',
-    priceUSD: 270,
-    status: 'available',
-    rating: 4.95,
-    reviewsCount: 18,
-    isFeatured: true,
-    locationCityState: 'Greenwich, CT',
-    breeder: SAMPLE_BREEDERS[2],
-    medicalInfo: {
-      overallHealth: 'Excellent',
-      vetExamPassed: true,
-      vaccinated: true,
-      vaccinatedDates: ['2026-07-15'],
-      dewormed: true,
-      microchipped: true,
-      healthCertIncluded: true,
-      pedigreeCertIncluded: true,
-      dnaScreeningPassed: true,
-      lastVetCheckDate: '2026-08-01',
-      nextVaccinationDue: '2026-09-10',
-      healthGuaranteeDays: 90
-    },
-    personalityTraits: ['Happy', 'Affectionate', 'Fluffy', 'Gentle', 'Good with Kids'],
-    breedDetails: {
-      history: 'Bred for arctic warmth and friendly smiling companion demeanor.',
-      lifespan: '12 - 14 years',
-      exerciseNeeds: 'High',
-      groomingRequirements: 'High',
-      climateSuitability: 'Cool or Temperate',
-      temperament: ['Gentle', 'Outgoing', 'Loyal'],
-      commonHealthConcerns: ['Hip & Eye Certified'],
-      trainingDifficulty: 'Easy',
-      recommendedHome: 'Family homes.'
-    },
-    images: [
-      'https://commons.wikimedia.org/wiki/Special:FilePath/Samoyed-and-teddy-bear.jpg?width=1200'
-    ],
-    purchaseIncludes: [
-      'AKC Pedigree Registration',
-      'Vet Health Passport',
-      'Fluff Grooming Comb',
       '90-Day Guarantee'
     ]
   },

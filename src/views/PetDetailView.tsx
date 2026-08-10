@@ -315,7 +315,7 @@ export const PetDetailView: React.FC = () => {
             type="text"
             value={aiQuestion}
             onChange={(e) => setAiQuestion(e.target.value)}
-            placeholder={`e.g. Is ${pet.name} good with young children and cat-friendly?`}
+            placeholder=""
             className="flex-1 px-4 py-3 rounded-2xl text-xs bg-white/10 border border-white/20 text-white focus:outline-none focus:bg-white/20"
           />
           <button

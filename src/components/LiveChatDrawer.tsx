@@ -136,7 +136,7 @@ export const LiveChatDrawer: React.FC = () => {
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Ask concierge a question..."
+          placeholder=""
           className="flex-1 px-3 py-2 text-xs rounded-full border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface focus:outline-none"
         />
         <button

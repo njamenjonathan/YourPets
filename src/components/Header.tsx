@@ -254,7 +254,7 @@ export const Header: React.FC = () => {
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Search breeds..."
+                  placeholder=""
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -399,7 +399,7 @@ export const Header: React.FC = () => {
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-outline" />
             <input
               type="text"
-              placeholder="Search breeds, traits..."
+              placeholder=""
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
