@@ -96,7 +96,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Family homes with yard space.'
     },
     images: [
-      'https://images.unsplash.com/photo-1591160690555-5debfba289f0?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Golden%20Retriever%20puppy%20standing.jpg?width=1200'
     ],
     purchaseIncludes: [
       'Official Veterinary Health Certificate',
@@ -155,7 +155,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Family homes and active owners.'
     },
     images: [
-      'https://images.unsplash.com/photo-1534361960057-19889db98d18?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Golden%20Retriever%20puppy%20%283813393%29.jpg?width=1200'
     ],
     purchaseIncludes: [
       'AKC Pedigree Papers',
@@ -213,7 +213,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Enriched home with play space.'
     },
     images: [
-      'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Savannah%20kitten.jpg?width=1200'
     ],
     purchaseIncludes: [
       'TICA Certified F1 Pedigree Certificate',
@@ -271,7 +271,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Attentive, active owners.'
     },
     images: [
-      'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Savannah%20Kittens%20F2b%201week%20old.jpg?width=1200'
     ],
     purchaseIncludes: [
       'TICA Registration Papers',
@@ -329,7 +329,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Apartments or cozy residences.'
     },
     images: [
-      'https://images.unsplash.com/photo-1508948956644-0017e845d797?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/French%20Bulldog%20puppy%20259A41731102.jpg?width=1200'
     ],
     purchaseIncludes: [
       'AKC Pedigree Papers',
@@ -387,7 +387,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Apartment and city living.'
     },
     images: [
-      'https://images.unsplash.com/photo-1575425186775-b8de9a427e67?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Merle%20French%20Bulldog%20puppy.jpg?width=1200'
     ],
     purchaseIncludes: [
       'AKC Platinum Pedigree Registration',
@@ -445,7 +445,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Apartments or quiet residences.'
     },
     images: [
-      'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Persian%20kitten%20%28closeup%20of%20face%29.jpg?width=1200'
     ],
     purchaseIncludes: [
       'TICA Registration Certificate',
@@ -503,7 +503,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Apartments and quiet homes.'
     },
     images: [
-      'https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Persian%20kitten%20-%20blue.jpg?width=1200'
     ],
     purchaseIncludes: [
       'TICA Pedigree Papers',
@@ -561,7 +561,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Active family homes.'
     },
     images: [
-      'https://images.unsplash.com/photo-1588943211346-0908a1fb0b01?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Samoyed-dog.jpg?width=1200'
     ],
     purchaseIncludes: [
       'AKC Registration Papers',
@@ -619,7 +619,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Family homes.'
     },
     images: [
-      'https://images.unsplash.com/photo-1571988840298-3b5301d5109b?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Samoyed-and-teddy-bear.jpg?width=1200'
     ],
     purchaseIncludes: [
       'AKC Pedigree Registration',
@@ -678,7 +678,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Apartments or loving indoor homes.'
     },
     images: [
-      'https://images.unsplash.com/photo-1507146426996-ef05306b995a?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Pomeranian%20Pup.JPG?width=1200'
     ],
     purchaseIncludes: [
       'AKC Teacup Pedigree Papers',
@@ -736,7 +736,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Family homes.'
     },
     images: [
-      'https://images.unsplash.com/photo-1561037404-61cd46aa615b?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Archie%20the%20Pembroke%20Welsh%20Corgi.jpg?width=1200'
     ],
     purchaseIncludes: [
       'AKC Pedigree Registration',
@@ -794,7 +794,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Apartments or cozy homes.'
     },
     images: [
-      'https://images.unsplash.com/photo-1535930891776-0c2dfb7fda1a?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Smooth%20Miniature%20Dachshund%20puppy.jpg?width=1200'
     ],
     purchaseIncludes: [
       'AKC Registration Papers',
@@ -852,7 +852,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Interactive and playful owners.'
     },
     images: [
-      'https://images.unsplash.com/photo-1561948955-570b270e7c36?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Bengal%20cat%2C%2012%20weeks%20old%20%282308642374%29.jpg?width=1200'
     ],
     purchaseIncludes: [
       'TICA Pedigree Certificate',
@@ -910,7 +910,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Apartments and quiet homes.'
     },
     images: [
-      'https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Silver%20tabby%20Scottish%20Fold%20Kitten.jpg?width=1200'
     ],
     purchaseIncludes: [
       'TICA Scottish Fold Pedigree',
@@ -968,7 +968,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Indoor cozy residences.'
     },
     images: [
-      'https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Munchkin%20Kitten.jpg?width=1200'
     ],
     purchaseIncludes: [
       'TICA Pedigree Papers',
@@ -1026,7 +1026,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Loving family indoor homes.'
     },
     images: [
-      'https://images.unsplash.com/photo-1577023311546-acd0767730fe?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Ragdoll%20Kitten%20%2837508871054%29.jpg?width=1200'
     ],
     purchaseIncludes: [
       'TICA Ragdoll Pedigree',
@@ -1084,7 +1084,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Apartments or quiet residences.'
     },
     images: [
-      'https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/British%20shorthair%20kitten%20Erray%20Starfall%20LT.jpg?width=1200'
     ],
     purchaseIncludes: [
       'GCCF/TICA Pedigree',
@@ -1142,7 +1142,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Family homes.'
     },
     images: [
-      'https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Maine%20Coon%20male%20kitten%20portrait.jpg?width=1200'
     ],
     purchaseIncludes: [
       'TICA Pedigree Registration',
@@ -1200,7 +1200,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Active owners or families with yard.'
     },
     images: [
-      'https://images.unsplash.com/photo-1568572933382-74d440642117?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/8-Week%20Old%20German%20Shepherd%20Puppy.jpg?width=1200'
     ],
     purchaseIncludes: [
       'AKC Registration Papers',
@@ -1258,7 +1258,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Active households.'
     },
     images: [
-      'https://images.unsplash.com/photo-1505628346881-b72b27e84530?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Australian%20Shepherd%20puppy%20red-merle.jpg?width=1200'
     ],
     purchaseIncludes: [
       'AKC Pedigree Papers',
@@ -1316,7 +1316,7 @@ export const SAMPLE_PETS: Pet[] = [
       recommendedHome: 'Indoor climate controlled homes.'
     },
     images: [
-      'https://images.unsplash.com/photo-1571566882372-1598d88abd90?auto=format&fit=crop&q=80&w=1000'
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Sphynx%20kitten.JPG?width=1200'
     ],
     purchaseIncludes: [
       'TICA Pedigree Papers',
