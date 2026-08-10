@@ -218,7 +218,7 @@ export const AdminDashboardView: React.FC = () => {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Duke"
+                    placeholder=""
                     className="w-full p-2.5 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high"
                   />
                 </div>
@@ -230,7 +230,7 @@ export const AdminDashboardView: React.FC = () => {
                     required
                     value={breed}
                     onChange={(e) => setBreed(e.target.value)}
-                    placeholder="e.g. Cavalier King Charles"
+                    placeholder=""
                     className="w-full p-2.5 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high"
                   />
                 </div>

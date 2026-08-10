@@ -239,7 +239,7 @@ export const AuthModal: React.FC = () => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@example.com"
+                      placeholder=""
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface"
                     />
                   </div>
@@ -256,7 +256,7 @@ export const AuthModal: React.FC = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder=""
                     className="w-full pl-10 pr-10 py-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface"
                   />
                   <button
@@ -297,7 +297,7 @@ export const AuthModal: React.FC = () => {
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g. Lady Eleanor Vance"
+                    placeholder=""
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface"
                   />
                 </div>
@@ -312,7 +312,7 @@ export const AuthModal: React.FC = () => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="eleanor@example.com"
+                    placeholder=""
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface"
                   />
                 </div>
@@ -327,7 +327,7 @@ export const AuthModal: React.FC = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 4 characters"
+                    placeholder=""
                     className="w-full pl-10 pr-10 py-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface"
                   />
                   <button
@@ -349,7 +349,7 @@ export const AuthModal: React.FC = () => {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter password"
+                    placeholder=""
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface"
                   />
                 </div>

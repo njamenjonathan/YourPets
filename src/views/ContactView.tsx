@@ -6,7 +6,7 @@ export const ContactView: React.FC = () => {
   const { showNotification } = usePetStore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState('Pet Reservation Inquiry');
+  const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -82,7 +82,7 @@ export const ContactView: React.FC = () => {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Lady Eleanor Vance"
+                    placeholder=""
                     className="w-full p-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high"
                   />
                 </div>
@@ -93,7 +93,7 @@ export const ContactView: React.FC = () => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@domain.com"
+                    placeholder=""
                     className="w-full p-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high"
                   />
                 </div>
@@ -117,7 +117,7 @@ export const ContactView: React.FC = () => {
                   rows={4}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="How can we assist with your companion inquiry?"
+                  placeholder=""
                   className="w-full p-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high"
                 />
               </div>

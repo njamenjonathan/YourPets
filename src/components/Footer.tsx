@@ -86,7 +86,7 @@ export const Footer: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter email address..."
+                    placeholder=""
                     required
                     className="flex-1 bg-surface-low dark:bg-surface-high border border-outline-variant rounded-full px-4 py-2.5 text-xs text-on-surface focus:outline-none focus:border-[#002045]"
                   />

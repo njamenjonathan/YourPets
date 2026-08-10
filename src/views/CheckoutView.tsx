@@ -32,11 +32,11 @@ export const CheckoutView: React.FC = () => {
     );
   }
 
-  const [customerName, setCustomerName] = useState('Lady Eleanor Vance');
-  const [email, setEmail] = useState('eleanor.vance@beverlyhills.org');
-  const [phone, setPhone] = useState('+1 (330) 516-1283');
-  const [deliveryAddress, setDeliveryAddress] = useState('10044 Sunset Boulevard');
-  const [cityStateZip, setCityStateZip] = useState('Beverly Hills, CA 90210');
+  const [customerName, setCustomerName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [cityStateZip, setCityStateZip] = useState('');
   
   // Destination Location Pricing ($100 domestic vs $200 international)
   const [destinationType, setDestinationType] = useState<'domestic' | 'international'>('domestic');
@@ -45,7 +45,7 @@ export const CheckoutView: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'chime' | 'applepay' | 'wire'>('whatsapp');
   
   // Chime payment state
-  const [chimeSign, setChimeSign] = useState('$YourPetsOfficial');
+  const [chimeSign, setChimeSign] = useState('');
 
   // Apple Pay / Gift card state
   const [appleGiftCardCode, setAppleGiftCardCode] = useState('');
@@ -393,7 +393,7 @@ export const CheckoutView: React.FC = () => {
                     required
                     value={chimeSign}
                     onChange={(e) => setChimeSign(e.target.value)}
-                    placeholder="$YourChimeSign or +1 (330) 516-1283"
+                    placeholder=""
                     className="w-full p-3 rounded-xl border border-outline-variant bg-white dark:bg-surface-high text-on-surface"
                   />
                 </div>
@@ -418,7 +418,7 @@ export const CheckoutView: React.FC = () => {
                       type="text"
                       value={appleGiftCardCode}
                       onChange={(e) => setAppleGiftCardCode(e.target.value)}
-                      placeholder="e.g. X89K-47LP-90Q2"
+                      placeholder=""
                       className="flex-1 p-2.5 rounded-lg border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface uppercase font-mono"
                     />
                     <button
