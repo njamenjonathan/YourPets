@@ -1,4 +1,6 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
+import { Resend } from 'resend';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI, Type } from '@google/genai';
@@ -12,6 +14,16 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json({ limit: '10mb' }));
+
+  const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false });
+  const twoFactorCodes = new Map<string, { code: string; expiresAt: number; attempts: number }>();
+  const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+  const emailFrom = process.env.ORDER_EMAIL_FROM || 'YourPets <orders@example.com>';
+  const ownerEmail = process.env.ORDER_NOTIFICATION_EMAIL || 'craftking990@gmail.com';
+
+  const getBearerToken = (header?: string) => header?.startsWith('Bearer ') ? header.slice(7) : '';
+  const isEmail = (value: unknown) => typeof value === 'string' && /^\S+@\S+\.\S+$/.test(value);
+  const escapeHtml = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char] || char));
 
   // Initialize Gemini Client server-side lazily
   const getAiClient = () => {
@@ -29,6 +41,50 @@ async function startServer() {
       },
     });
   };
+
+
+  app.post('/api/auth/signup-check', authLimiter, (req, res) => {
+    const { email } = req.body;
+    if (!isEmail(email)) return res.status(400).json({ error: 'A valid email is required.' });
+    return res.json({ success: true });
+  });
+
+  app.post('/api/auth/send-2fa-code', authLimiter, async (req, res) => {
+    try {
+      const token = getBearerToken(req.headers.authorization);
+      const { email } = req.body;
+      if (!token || !isEmail(email)) return res.status(400).json({ error: 'Valid login and email are required.' });
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      twoFactorCodes.set(token, { code, expiresAt: Date.now() + 10 * 60 * 1000, attempts: 0 });
+      if (resend) {
+        await resend.emails.send({
+          from: emailFrom,
+          to: email,
+          subject: 'YourPets verification code',
+          html: `<p>Your YourPets verification code is <strong>${code}</strong>.</p><p>This code expires in 10 minutes.</p>`
+        });
+      } else {
+        console.warn('RESEND_API_KEY not set; development 2FA code generated but not emailed.');
+      }
+      return res.json({ success: true });
+    } catch (err: any) {
+      console.error('2FA send error:', err?.message || err);
+      return res.status(500).json({ error: 'Failed to send verification code.' });
+    }
+  });
+
+  app.post('/api/auth/verify-2fa-code', authLimiter, (req, res) => {
+    const token = getBearerToken(req.headers.authorization);
+    const record = token ? twoFactorCodes.get(token) : null;
+    const code = String(req.body.code || '').trim();
+    if (!record) return res.status(400).json({ error: 'Verification code expired. Please log in again.' });
+    if (record.expiresAt < Date.now()) { twoFactorCodes.delete(token); return res.status(400).json({ error: 'Verification code expired. Please log in again.' }); }
+    record.attempts += 1;
+    if (record.attempts > 5) { twoFactorCodes.delete(token); return res.status(429).json({ error: 'Too many incorrect verification attempts.' }); }
+    if (record.code !== code) return res.status(400).json({ error: 'Invalid verification code.' });
+    twoFactorCodes.delete(token);
+    return res.json({ success: true });
+  });
 
   // API Route: Health Check
   app.get('/api/health', (req, res) => {
@@ -58,7 +114,6 @@ async function startServer() {
         paymentMethod
       } = req.body;
 
-      const ownerEmail = 'craftking990@gmail.com';
       const formattedTotal = typeof totalAmount === 'number' ? `$${totalAmount.toLocaleString('en-US')}` : `$${totalAmount}`;
 
       const emailSubject = `🚨 NEW ORDER CONFIRMATION #${orderId} - ${formattedTotal} USD - Target: ${ownerEmail}`;
@@ -132,6 +187,18 @@ CONFIRMATION: Order summary email successfully queued & dispatched to ${ownerEma
       console.log(`📩 COMPREHENSIVE ORDER SUMMARY DISPATCH TO: ${ownerEmail}`);
       console.log(emailBody);
       console.log(`====================================================\n`);
+
+      if (resend) {
+        await resend.emails.send({
+          from: emailFrom,
+          to: ownerEmail,
+          subject: emailSubject,
+          text: emailBody,
+          html: `<pre style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap;">${escapeHtml(emailBody)}</pre>`
+        });
+      } else {
+        console.warn('RESEND_API_KEY not set; order email was not sent by an email provider.');
+      }
 
       return res.json({
         success: true,

@@ -7,6 +7,10 @@ import {
   googleProvider,
   signInWithPopup,
   signOut,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendPasswordResetEmail,
   onAuthStateChanged,
   doc,
   setDoc,
@@ -14,7 +18,8 @@ import {
   collection,
   query,
   where,
-  onSnapshot
+  onSnapshot,
+  orderBy
 } from '../lib/firebase';
 
 const CURRENCY_RATES: Record<Currency, { symbol: string; rate: number }> = {
@@ -57,9 +62,11 @@ interface PetStoreContextType {
   rememberedEmail: string;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
-  loginUser: (email: string, password: string) => { success: boolean; message: string };
+  loginUser: (email: string, password: string) => Promise<{ success: boolean; message: string; needs2FA?: boolean }>;
+  verifyTwoFactorCode: (code: string) => Promise<{ success: boolean; message: string }>;
+  resetPassword: (email: string) => Promise<{ success: boolean; message: string }>;
   loginWithGoogle: () => Promise<{ success: boolean; message: string }>;
-  registerUser: (name: string, email: string, password: string) => { success: boolean; message: string };
+  registerUser: (name: string, email: string, password: string) => Promise<{ success: boolean; message: string }>;
   logoutUser: () => void;
   setRememberedEmail: (email: string) => void;
 
@@ -129,7 +136,7 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [recentlyViewed, setRecentlyViewed] = useState<Pet[]>([]);
   const [compareList, setCompareList] = useState<Pet[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('home');
+  const [activeTab, setActiveTabState] = useState<string>(() => window.location.hash.replace('#/', '') || 'home');
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedBreeder, setSelectedBreeder] = useState<Breeder | null>(null);
@@ -157,12 +164,7 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { /* ignore */ }
     }
-    return {
-      name: 'Lady Eleanor Vance',
-      email: 'eleanor.vance@beverlyhills.org',
-      isLoggedIn: true,
-      memberSince: '2026'
-    };
+    return null;
   });
 
   // Listen to Firebase Auth state changes
@@ -176,7 +178,10 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           name: userDisplayName,
           email: userEmail,
           isLoggedIn: true,
-          memberSince: '2026'
+          memberSince: '2026',
+          uid: fbUser.uid,
+          role: userEmail === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer',
+          twoFactorVerified: sessionStorage.getItem(`yourpets_2fa_${fbUser.uid}`) === 'verified'
         };
 
         setCurrentUser(userObj);
@@ -188,7 +193,9 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           await setDoc(doc(db, 'users', fbUser.uid), {
             uid: fbUser.uid,
             displayName: userDisplayName,
+            name: userDisplayName,
             email: userEmail,
+            role: userEmail === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer',
             photoURL: fbUser.photoURL || '',
             createdAt: new Date().toISOString()
           }, { merge: true });
@@ -200,6 +207,20 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const onPopState = () => setActiveTabState(window.location.hash.replace('#/', '') || 'home');
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  const setActiveTab = (tab: string) => {
+    setActiveTabState(tab);
+    const nextHash = `#/${tab}`;
+    if (window.location.hash !== nextHash) {
+      window.history.pushState({ tab }, '', nextHash);
+    }
+  };
 
   const setRememberedEmail = (email: string) => {
     const clean = email.trim().toLowerCase();
@@ -213,84 +234,134 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const fbUser = result.user;
       const userEmail = fbUser.email || '';
       const userDisplayName = fbUser.displayName || userEmail.split('@')[0] || 'VIP Member';
+      const role = userEmail === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer';
 
       const userObj: UserAccount = {
+        uid: fbUser.uid,
         name: userDisplayName,
         email: userEmail,
+        role,
         isLoggedIn: true,
+        twoFactorVerified: true,
         memberSince: '2026'
       };
 
+      sessionStorage.setItem(`yourpets_2fa_${fbUser.uid}`, 'verified');
       setCurrentUser(userObj);
       setRememberedEmail(userEmail);
-      localStorage.setItem('yourpets_current_user', JSON.stringify(userObj));
-
-      // Save/Sync to Firestore
       await setDoc(doc(db, 'users', fbUser.uid), {
         uid: fbUser.uid,
         displayName: userDisplayName,
+        name: userDisplayName,
         email: userEmail,
+        role,
         photoURL: fbUser.photoURL || '',
-        createdAt: new Date().toISOString()
+        updatedAt: new Date().toISOString()
       }, { merge: true });
 
       setIsAuthModalOpen(false);
       showNotification(`Welcome, ${userDisplayName}! Signed in with Google.`);
       return { success: true, message: 'Signed in with Google successfully' };
     } catch (err: any) {
-      console.error('Google Sign-In Error:', err);
       return { success: false, message: err?.message || 'Google Sign-In failed. Please try again.' };
     }
   };
 
-  const loginUser = (email: string, password?: string) => {
+  const loginUser = async (email: string, password: string) => {
     const cleanEmail = email.trim().toLowerCase();
-    setRememberedEmail(cleanEmail);
-
-    const storedUsersJson = localStorage.getItem('yourpets_registered_users');
-    const registeredUsers: Record<string, { name: string; email: string; password?: string }> = storedUsersJson ? JSON.parse(storedUsersJson) : {};
-
-    let userObj: UserAccount;
-    if (registeredUsers[cleanEmail]) {
-      const reg = registeredUsers[cleanEmail];
-      if (reg.password && password && reg.password !== password) {
-        return { success: false, message: 'Incorrect password. Please try again.' };
-      }
-      userObj = { name: reg.name, email: reg.email, isLoggedIn: true, memberSince: '2026' };
-    } else {
-      const defaultName = cleanEmail === 'eleanor.vance@beverlyhills.org' ? 'Lady Eleanor Vance' : cleanEmail.split('@')[0];
-      userObj = { name: defaultName, email: cleanEmail, isLoggedIn: true, memberSince: '2026' };
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail) || password.length < 6) {
+      return { success: false, message: 'Enter a valid email and password.' };
     }
-
-    setCurrentUser(userObj);
-    localStorage.setItem('yourpets_current_user', JSON.stringify(userObj));
-    setIsAuthModalOpen(false);
-    showNotification(`Welcome back, ${userObj.name}!`);
-    return { success: true, message: 'Logged in successfully' };
+    try {
+      const result = await signInWithEmailAndPassword(auth, cleanEmail, password);
+      const token = await result.user.getIdToken();
+      const res = await fetch('/api/auth/send-2fa-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ email: cleanEmail })
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Unable to send verification code.');
+      setCurrentUser({
+        uid: result.user.uid,
+        name: result.user.displayName || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        role: cleanEmail === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer',
+        isLoggedIn: false,
+        twoFactorVerified: false,
+        memberSince: '2026'
+      });
+      setRememberedEmail(cleanEmail);
+      return { success: true, needs2FA: true, message: 'Verification code sent to your email.' };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Login failed.' };
+    }
   };
 
-  const registerUser = (name: string, email: string, password: string) => {
+  const verifyTwoFactorCode = async (code: string) => {
+    if (!auth.currentUser) return { success: false, message: 'Please log in again.' };
+    if (!/^\d{6}$/.test(code.trim())) return { success: false, message: 'Enter the 6-digit code.' };
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch('/api/auth/verify-2fa-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ code: code.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, message: data.error || 'Invalid verification code.' };
+      const email = auth.currentUser.email || '';
+      const userObj: UserAccount = {
+        uid: auth.currentUser.uid,
+        name: auth.currentUser.displayName || email.split('@')[0],
+        email,
+        role: email === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer',
+        isLoggedIn: true,
+        twoFactorVerified: true,
+        memberSince: '2026'
+      };
+      sessionStorage.setItem(`yourpets_2fa_${auth.currentUser.uid}`, 'verified');
+      setCurrentUser(userObj);
+      setIsAuthModalOpen(false);
+      showNotification(`Welcome back, ${userObj.name}!`);
+      return { success: true, message: 'Login verified.' };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Verification failed.' };
+    }
+  };
+
+  const registerUser = async (name: string, email: string, password: string) => {
     const cleanEmail = email.trim().toLowerCase();
-    setRememberedEmail(cleanEmail);
+    const cleanName = name.trim();
+    if (cleanName.length < 2 || !/^\S+@\S+\.\S+$/.test(cleanEmail) || password.length < 6) {
+      return { success: false, message: 'Enter a name, valid email, and password of at least 6 characters.' };
+    }
+    try {
+      const res = await fetch('/api/auth/signup-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: cleanEmail }) });
+      if (!res.ok) throw new Error((await res.json()).error || 'Too many signup attempts.');
+      const cred = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+      await updateProfile(cred.user, { displayName: cleanName });
+      const role = cleanEmail === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer';
+      await setDoc(doc(db, 'users', cred.user.uid), { uid: cred.user.uid, name: cleanName, displayName: cleanName, email: cleanEmail, role, createdAt: new Date().toISOString() }, { merge: true });
+      sessionStorage.setItem(`yourpets_2fa_${cred.user.uid}`, 'verified');
+      setCurrentUser({ uid: cred.user.uid, name: cleanName, email: cleanEmail, role, isLoggedIn: true, twoFactorVerified: true, memberSince: new Date().getFullYear().toString() });
+      setRememberedEmail(cleanEmail);
+      setIsAuthModalOpen(false);
+      showNotification(`Account created! Welcome, ${cleanName}!`);
+      return { success: true, message: 'Account registered' };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Account registration failed.' };
+    }
+  };
 
-    const storedUsersJson = localStorage.getItem('yourpets_registered_users');
-    const registeredUsers: Record<string, { name: string; email: string; password?: string }> = storedUsersJson ? JSON.parse(storedUsersJson) : {};
-
-    registeredUsers[cleanEmail] = { name: name.trim(), email: cleanEmail, password };
-    localStorage.setItem('yourpets_registered_users', JSON.stringify(registeredUsers));
-
-    const newUser: UserAccount = {
-      name: name.trim(),
-      email: cleanEmail,
-      isLoggedIn: true,
-      memberSince: new Date().getFullYear().toString()
-    };
-
-    setCurrentUser(newUser);
-    localStorage.setItem('yourpets_current_user', JSON.stringify(newUser));
-    setIsAuthModalOpen(false);
-    showNotification(`Account created! Welcome, ${newUser.name}!`);
-    return { success: true, message: 'Account registered' };
+  const resetPassword = async (email: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) return { success: false, message: 'Enter a valid email address.' };
+    try {
+      await sendPasswordResetEmail(auth, cleanEmail);
+      return { success: true, message: 'Password reset email sent.' };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Could not send password reset email.' };
+    }
   };
 
   const logoutUser = () => {
@@ -309,6 +380,43 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    if (currentUser?.role !== 'admin' || !currentUser.isLoggedIn) return;
+    const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+      const remoteOrders = snapshot.docs.map((orderDoc) => ({ id: orderDoc.id, ...orderDoc.data() } as Partial<Order> & { createdAt?: string }));
+      setOrders(prev => {
+        const merged = [...prev];
+        remoteOrders.forEach(remote => {
+          if (!merged.some(order => order.id === remote.id)) {
+            merged.push({
+              id: remote.id || 'unknown',
+              pet: pets[0],
+              orderDate: typeof remote.createdAt === 'string' ? new Date(remote.createdAt).toLocaleDateString() : 'Recent',
+              status: (remote.status as Order['status']) || 'Pending',
+              subtotal: Number(remote.subtotal || 0),
+              addonsTotal: Number(remote.addonsTotal || 0),
+              taxes: Number(remote.taxes || 0),
+              deliveryCost: Number(remote.deliveryCost || 0),
+              totalAmount: Number(remote.totalAmount || 0),
+              trackingNumber: String(remote.trackingNumber || ''),
+              estimatedDeliveryDate: String(remote.estimatedDeliveryDate || ''),
+              customerName: String(remote.customerName || ''),
+              deliveryAddress: String(remote.deliveryAddress || ''),
+              cityStateZip: String(remote.cityStateZip || ''),
+              phone: String(remote.phone || ''),
+              paymentMethod: String(remote.paymentMethod || ''),
+              buyerEmail: String(remote.buyerEmail || ''),
+              items: remote.items || []
+            });
+          }
+        });
+        return merged;
+      });
+    }, (err) => console.warn('Admin orders subscription warning:', err));
+    return () => unsubscribe();
+  }, [currentUser?.role, currentUser?.isLoggedIn, pets]);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -466,7 +574,7 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       id: `YP-${Math.floor(100000 + Math.random() * 900000)}`,
       pet: mainPet,
       orderDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      status: 'Payment Confirmed',
+      status: 'Pending',
       subtotal,
       addonsTotal,
       taxes,
@@ -479,6 +587,8 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       cityStateZip: details.cityStateZip || 'Beverly Hills, CA 90210',
       phone: details.phone || '+1 (330) 516-1283',
       paymentMethod: details.paymentMethod || 'Credit Card (Visa)',
+      buyerEmail: currentUser?.email,
+      items: cart.map(item => ({ productName: item.pet.name, quantity: 1, price: item.pet.priceUSD, total: item.totalPriceUSD })),
       depositPaid: details.depositPaid || false,
       depositAmount: details.depositAmount || 0,
     };
@@ -490,6 +600,8 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setDoc(doc(db, 'orders', newOrder.id), {
         userId: auth.currentUser.uid,
         petId: mainPet.id,
+        items: newOrder.items || [],
+        buyerEmail: currentUser?.email || '',
         customerName: newOrder.customerName,
         phone: newOrder.phone,
         deliveryAddress: `${newOrder.deliveryAddress}, ${newOrder.cityStateZip}`,
@@ -505,29 +617,6 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Mark pet status as reserved/sold
     setPets(prev => prev.map(p => p.id === mainPet.id ? { ...p, status: 'reserved' } : p));
 
-    // Send HTTP Order Email Dispatch to Store Owner (craftking990@gmail.com)
-    fetch('/api/orders/email-notification', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        orderId: newOrder.id,
-        petName: mainPet.name,
-        breed: mainPet.breed,
-        customerName: newOrder.customerName,
-        email: 'craftking990@gmail.com',
-        phone: newOrder.phone,
-        deliveryAddress: `${newOrder.deliveryAddress}, ${newOrder.cityStateZip}`,
-        destinationType: deliveryCost === 100 ? 'Domestic USA ($100)' : 'International Overseas ($200)',
-        subtotal,
-        deliveryCost,
-        addonsTotal,
-        totalAmount,
-        paymentMethod: newOrder.paymentMethod
-      })
-    }).then(res => res.json()).then(data => {
-      console.log('Order notification email dispatch result:', data);
-    }).catch(err => console.error('Email notify error:', err));
-    
     clearCart();
     setSelectedOrder(newOrder);
     showNotification(`Order #${newOrder.id} placed! Exact total of $${totalAmount} emailed to craftking990@gmail.com.`);
@@ -601,6 +690,8 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setIsAuthModalOpen,
         loginUser,
         loginWithGoogle,
+        verifyTwoFactorCode,
+        resetPassword,
         registerUser,
         logoutUser,
         setRememberedEmail,
