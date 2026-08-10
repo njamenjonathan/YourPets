@@ -11,16 +11,21 @@ export const AuthModal: React.FC = () => {
     loginUser,
     loginWithGoogle,
     registerUser,
+    verifyTwoFactorCode,
+    resetPassword,
     setRememberedEmail
   } = usePetStore();
 
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot' | '2fa'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [useRemembered, setUseRemembered] = useState(true);
 
@@ -36,7 +41,7 @@ export const AuthModal: React.FC = () => {
 
   if (!isAuthModalOpen) return null;
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -51,16 +56,22 @@ export const AuthModal: React.FC = () => {
       return;
     }
 
-    const res = loginUser(activeEmail, password);
+    setIsEmailLoading(true);
+    const res = await loginUser(activeEmail, password);
+    setIsEmailLoading(false);
     if (!res.success) {
       setErrorMessage(res.message);
+    } else if (res.needs2FA) {
+      setPassword('');
+      setInfoMessage(res.message);
+      setMode('2fa');
     } else {
       setPassword('');
       setErrorMessage(null);
     }
   };
 
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -74,8 +85,8 @@ export const AuthModal: React.FC = () => {
       return;
     }
 
-    if (!password || password.length < 4) {
-      setErrorMessage('Password must be at least 4 characters long');
+    if (!password || password.length < 6) {
+      setErrorMessage('Password must be at least 6 characters long');
       return;
     }
 
@@ -84,7 +95,9 @@ export const AuthModal: React.FC = () => {
       return;
     }
 
-    const res = registerUser(fullName, email, password);
+    setIsEmailLoading(true);
+    const res = await registerUser(fullName, email, password);
+    setIsEmailLoading(false);
     if (!res.success) {
       setErrorMessage(res.message);
     } else {
@@ -93,6 +106,27 @@ export const AuthModal: React.FC = () => {
       setFullName('');
       setErrorMessage(null);
     }
+  };
+
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setInfoMessage(null);
+    setIsEmailLoading(true);
+    const res = await resetPassword(email || rememberedEmail);
+    setIsEmailLoading(false);
+    if (res.success) setInfoMessage(res.message);
+    else setErrorMessage(res.message);
+  };
+
+  const handleTwoFactorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setIsEmailLoading(true);
+    const res = await verifyTwoFactorCode(twoFactorCode);
+    setIsEmailLoading(false);
+    if (!res.success) setErrorMessage(res.message);
   };
 
   const isRememberedActive = useRemembered && !!rememberedEmail && mode === 'login';
@@ -118,7 +152,7 @@ export const AuthModal: React.FC = () => {
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">YourPets VIP Account</span>
               <h2 className="font-serif-display font-bold text-2xl">
-                {mode === 'login' ? 'Welcome Back' : 'Create VIP Account'}
+                {mode === 'signup' ? 'Create VIP Account' : mode === 'forgot' ? 'Reset Password' : mode === '2fa' ? 'Verify Email Code' : 'Welcome Back'}
               </h2>
             </div>
           </div>
@@ -197,6 +231,12 @@ export const AuthModal: React.FC = () => {
             </button>
           </div>
 
+          {infoMessage && (
+            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+              {infoMessage}
+            </div>
+          )}
+
           {errorMessage && (
             <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 text-rose-700 dark:text-rose-300 text-xs font-semibold">
               {errorMessage}
@@ -273,15 +313,33 @@ export const AuthModal: React.FC = () => {
                 type="submit"
                 className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-emerald-700 transition-colors shadow-md flex items-center justify-center gap-2"
               >
-                <span>Sign In To Account</span>
+                <span>{isEmailLoading ? 'Checking...' : 'Sign In To Account'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              <div className="text-center pt-2">
+              <div className="text-center pt-2 space-y-2">
+                <button type="button" onClick={() => { setMode('forgot'); setErrorMessage(null); }} className="text-[11px] font-bold text-[#002045] dark:text-emerald-300 hover:underline">Forgot password?</button>
                 <span className="text-[11px] text-on-surface-variant flex items-center justify-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> 100% Encrypted & Remembered on Device
                 </span>
               </div>
+            </form>
+          )}
+
+          {mode === 'forgot' && (
+            <form onSubmit={handleForgotSubmit} className="space-y-4 text-xs">
+              <label className="block font-bold mb-1 text-on-surface">Account Email</label>
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface" />
+              <button type="submit" className="w-full bg-[#002045] text-white py-3.5 rounded-xl font-bold uppercase tracking-wider">{isEmailLoading ? 'Sending...' : 'Send Password Reset Email'}</button>
+              <button type="button" onClick={() => setMode('login')} className="w-full text-center font-bold text-on-surface-variant hover:underline">Back to sign in</button>
+            </form>
+          )}
+
+          {mode === '2fa' && (
+            <form onSubmit={handleTwoFactorSubmit} className="space-y-4 text-xs">
+              <p className="text-on-surface-variant">Enter the 6-digit verification code sent to your email. Codes expire after 10 minutes.</p>
+              <input inputMode="numeric" maxLength={6} required value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface text-center text-lg tracking-[0.5em] font-bold" />
+              <button type="submit" className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold uppercase tracking-wider">{isEmailLoading ? 'Verifying...' : 'Verify & Continue'}</button>
             </form>
           )}
 
@@ -359,7 +417,7 @@ export const AuthModal: React.FC = () => {
                 type="submit"
                 className="w-full bg-[#002045] text-white py-3.5 rounded-xl font-bold uppercase tracking-wider hover:bg-[#1a365d] transition-colors shadow-md flex items-center justify-center gap-2"
               >
-                <span>Create Account & Remember Email</span>
+                <span>{isEmailLoading ? 'Creating...' : 'Create Account'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>

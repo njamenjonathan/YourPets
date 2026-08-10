@@ -6,7 +6,7 @@ import { usePetStore } from '../context/PetStoreContext';
 import { Pet, Species, BreedType, Gender } from '../types';
 
 export const AdminDashboardView: React.FC = () => {
-  const { pets, addPet, updatePet, deletePet, formatPrice } = usePetStore();
+  const { pets, orders, addPet, updatePet, deletePet, formatPrice, currentUser, setIsAuthModalOpen } = usePetStore();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingPet, setEditingPet] = useState<Pet | null>(null);
@@ -98,6 +98,22 @@ export const AdminDashboardView: React.FC = () => {
     setPriceUSD(220);
   };
 
+  if (!currentUser?.isLoggedIn || currentUser.role !== 'admin') {
+    return (
+      <div className="space-y-8 animate-fade-in pb-16">
+        <div className="p-8 rounded-3xl bg-[#002045] text-white shadow-xl">
+          <span className="text-xs font-bold uppercase tracking-widest text-amber-400">Protected Route</span>
+          <h1 className="font-serif-display font-bold text-3xl md:text-4xl">Admin Access Required</h1>
+        </div>
+        <div className="p-10 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 text-center space-y-4">
+          <ShieldCheck className="w-12 h-12 mx-auto text-amber-500" />
+          <p className="text-sm text-on-surface-variant">Sign in with the configured admin email to view orders and manage inventory.</p>
+          <button onClick={() => setIsAuthModalOpen(true)} className="bg-[#002045] text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider">Sign In</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-fade-in pb-16">
       {/* Header */}
@@ -139,6 +155,32 @@ export const AdminDashboardView: React.FC = () => {
           <span className="text-xs font-bold uppercase text-on-surface-variant">Avg. Listing Value</span>
           <div className="text-3xl font-serif-display font-bold text-[#002045] dark:text-white">$235</div>
         </div>
+      </div>
+
+
+      <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 shadow-sm overflow-x-auto">
+        <h3 className="font-serif-display font-bold text-xl text-on-surface mb-4">Incoming Orders</h3>
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-outline-variant/30 text-on-surface-variant uppercase">
+              <th className="p-3">Order</th><th className="p-3">Buyer</th><th className="p-3">Items</th><th className="p-3">Total</th><th className="p-3">Status</th><th className="p-3">Phone</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/20">
+            {orders.length === 0 ? (
+              <tr><td className="p-3 text-on-surface-variant" colSpan={6}>No orders yet.</td></tr>
+            ) : orders.map(order => (
+              <tr key={order.id} className="hover:bg-surface-low dark:hover:bg-surface-high">
+                <td className="p-3 font-bold text-on-surface">{order.id}</td>
+                <td className="p-3"><div className="font-semibold text-on-surface">{order.customerName}</div><div className="text-on-surface-variant">{order.buyerEmail}</div></td>
+                <td className="p-3 text-on-surface-variant">{order.items?.map(item => `${item.productName} x${item.quantity}`).join(', ') || order.pet.name}</td>
+                <td className="p-3 font-bold text-[#002045] dark:text-emerald-400">{formatPrice(order.totalAmount)}</td>
+                <td className="p-3"><span className="px-2 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">{order.status}</span></td>
+                <td className="p-3 text-on-surface-variant">{order.phone}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Pet Inventory Table */}

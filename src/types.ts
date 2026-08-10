@@ -1,7 +1,9 @@
 export interface UserAccount {
   name: string;
   email: string;
-  password?: string;
+  uid?: string;
+  role?: 'customer' | 'admin';
+  twoFactorVerified?: boolean;
   isLoggedIn: boolean;
   memberSince?: string;
 }
@@ -141,7 +143,9 @@ export interface Order {
   id: string;
   pet: Pet;
   orderDate: string;
-  status: 'Payment Confirmed' | 'Vet Pre-Flight Check' | 'Climate Transport Prepared' | 'In Transit' | 'Delivered';
+  status: 'Pending' | 'Confirmed' | 'Shipped' | 'Payment Confirmed' | 'Vet Pre-Flight Check' | 'Climate Transport Prepared' | 'In Transit' | 'Delivered';
+  items?: Array<{ productName: string; quantity: number; price: number; total: number }>;
+  buyerEmail?: string;
   subtotal: number;
   addonsTotal: number;
   taxes: number;

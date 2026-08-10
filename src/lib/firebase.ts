@@ -7,6 +7,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  updateProfile,
+  sendPasswordResetEmail,
+  setPersistence,
+  browserLocalPersistence,
   User as FirebaseUser
 } from 'firebase/auth';
 import {
@@ -19,15 +23,17 @@ import {
   where,
   onSnapshot,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  orderBy
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
-// Initialize Firebase App
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Initialize Auth & Firestore with specific database ID from config
 export const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.warn('Firebase auth persistence warning:', err);
+});
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 
 export const googleProvider = new GoogleAuthProvider();
@@ -39,6 +45,8 @@ export {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  updateProfile,
+  sendPasswordResetEmail,
   doc,
   setDoc,
   getDoc,
@@ -47,6 +55,7 @@ export {
   where,
   onSnapshot,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  orderBy
 };
 export type { FirebaseUser };

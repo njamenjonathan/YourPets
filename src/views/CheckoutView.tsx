@@ -8,6 +8,25 @@ export const CheckoutView: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSuccessMessage, setEmailSuccessMessage] = useState<string | null>(null);
 
+  const [customerName, setCustomerName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [cityStateZip, setCityStateZip] = useState('');
+  
+  // Destination Location Pricing ($100 domestic vs $200 international)
+  const [destinationType, setDestinationType] = useState<'domestic' | 'international'>('domestic');
+
+  // Payment Methods: whatsapp, chime, applepay, wire
+  const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'chime' | 'applepay' | 'wire'>('whatsapp');
+  
+  // Chime payment state
+  const [chimeSign, setChimeSign] = useState('');
+
+  // Apple Pay / Gift card state
+  const [appleGiftCardCode, setAppleGiftCardCode] = useState('');
+  const [giftCardApplied, setGiftCardApplied] = useState(false);
+
   if (!currentUser?.isLoggedIn) {
     return (
       <div className="space-y-8 animate-fade-in pb-16">
@@ -31,25 +50,6 @@ export const CheckoutView: React.FC = () => {
       </div>
     );
   }
-
-  const [customerName, setCustomerName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [cityStateZip, setCityStateZip] = useState('');
-  
-  // Destination Location Pricing ($100 domestic vs $200 international)
-  const [destinationType, setDestinationType] = useState<'domestic' | 'international'>('domestic');
-
-  // Payment Methods: whatsapp, chime, applepay, wire
-  const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'chime' | 'applepay' | 'wire'>('whatsapp');
-  
-  // Chime payment state
-  const [chimeSign, setChimeSign] = useState('');
-
-  // Apple Pay / Gift card state
-  const [appleGiftCardCode, setAppleGiftCardCode] = useState('');
-  const [giftCardApplied, setGiftCardApplied] = useState(false);
 
   const subtotal = cart.reduce((acc, item) => acc + item.pet.priceUSD, 0);
   const addonsTotal = cart.reduce((acc, item) => {
@@ -75,6 +75,12 @@ export const CheckoutView: React.FC = () => {
 
   const handleCompleteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedName = customerName.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedName || !/^\S+@\S+\.\S+$/.test(trimmedEmail) || phone.trim().length < 7 || deliveryAddress.trim().length < 5 || cityStateZip.trim().length < 3 || cart.length === 0) {
+      showNotification('Please complete all checkout fields with valid information.');
+      return;
+    }
     setIsSubmitting(true);
 
     let methodLabel = 'WhatsApp Escrow & Payment Confirmation';
@@ -113,11 +119,11 @@ export const CheckoutView: React.FC = () => {
       petsDetails,
       petName: cart[0]?.pet.name || 'Baby Pet',
       breed: cart[0]?.pet.breed || 'Purebred',
-      customerName,
-      email,
-      phone,
-      deliveryAddress,
-      cityStateZip,
+      customerName: trimmedName,
+      email: trimmedEmail,
+      phone: phone.trim(),
+      deliveryAddress: deliveryAddress.trim(),
+      cityStateZip: cityStateZip.trim(),
       destinationType,
       deliveryCost, // Location-based fee ($100 domestic vs $200 international)
       subtotal,
@@ -146,10 +152,10 @@ export const CheckoutView: React.FC = () => {
     }
 
     placeOrder({
-      customerName,
-      deliveryAddress,
-      cityStateZip,
-      phone,
+      customerName: trimmedName,
+      deliveryAddress: deliveryAddress.trim(),
+      cityStateZip: cityStateZip.trim(),
+      phone: phone.trim(),
       deliveryCost,
       paymentMethod: methodLabel
     });
