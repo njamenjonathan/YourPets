@@ -70,7 +70,9 @@ const MainContent: React.FC = () => {
       <Header />
 
       <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 md:px-8 pt-24">
-        {renderActiveTab()}
+        <section key={activeTab} className="page-transition" aria-live="polite">
+          {renderActiveTab()}
+        </section>
       </main>
 
       <Footer />
