@@ -1,6 +1,7 @@
 import React from 'react';
-import { ShieldCheck, Award, MapPin, CheckCircle2, Phone, Mail, MessageCircle } from 'lucide-react';
+import { MapPin, CheckCircle2, MessageCircle } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { Avatar } from '../components/PetPhoto';
 
 export const BreedersView: React.FC = () => {
   const { breeders, setIsChatOpen, setActiveTab, setFilterState } = usePetStore();
@@ -20,7 +21,7 @@ export const BreedersView: React.FC = () => {
           <div key={b.id} className="p-8 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm flex flex-col justify-between">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <img src={b.photo} alt={b.name} className="w-20 h-20 rounded-full object-cover border-2 border-emerald-500 shadow-sm" />
+                <Avatar src={b.photo} name={b.name} className="w-20 h-20 rounded-full object-cover border-2 border-emerald-500 shadow-sm shrink-0" />
                 <div>
                   <h3 className="font-serif-display font-bold text-xl text-on-surface">{b.name}</h3>
                   <p className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">

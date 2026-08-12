@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Camera, Upload, Sparkles, X, CheckCircle, ShieldCheck, Heart, ArrowRight, DollarSign, RefreshCw, AlertCircle } from 'lucide-react';
+import { Camera, Upload, Sparkles, X, CheckCircle, ShieldCheck, RefreshCw, AlertCircle } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { mainPhotoOf } from '../lib/petImages';
+import { PetPhoto } from './PetPhoto';
 import { Pet } from '../types';
 
 interface BreedAnalysisResult {
@@ -55,9 +57,15 @@ export const PetBreedIdentifierModal: React.FC = () => {
 
   if (!isBreedIdentifierOpen) return null;
 
+  const MAX_UPLOAD_BYTES = 6 * 1024 * 1024;
+
   const handleImageFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      setErrorMsg('Please select a valid image file (JPEG, PNG, WebP).');
+      setErrorMsg('Please select an image file (JPEG, PNG or WebP).');
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setErrorMsg('That photo is larger than 6 MB. Please choose a smaller one.');
       return;
     }
     setErrorMsg(null);
@@ -121,19 +129,10 @@ export const PetBreedIdentifierModal: React.FC = () => {
       setResult(data);
     } catch (err: any) {
       console.error('Breed identification error:', err);
-      // Smart local fallback if API fails
-      setResult({
-        breedName: 'Golden Retriever',
-        species: 'dog',
-        confidence: 94,
-        estimatedBabyPetPriceUSD: 2400,
-        priceRangeUSD: '$2,200 - $2,800',
-        temperament: 'Friendly, Intelligent, Devoted & Playful',
-        careLevel: 'Moderate',
-        sizeCategory: 'Large',
-        hypoallergenic: false,
-        description: 'Golden Retriever baby puppies are intelligent, affectionate, and wonderfully gentle. Highly adaptable for families and first-time owners.'
-      });
+      // Never invent a result: a made-up breed and price would look identical to
+      // a real analysis. Say the scan failed and offer a human instead.
+      setResult(null);
+      setErrorMsg('We could not analyse that photo right now. Please try another photo, or send it to us on WhatsApp and we will identify it for you.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -369,13 +368,14 @@ export const PetBreedIdentifierModal: React.FC = () => {
                             className="bg-surface-low dark:bg-surface-high p-3 rounded-2xl border border-outline-variant/40 flex flex-col justify-between hover:border-emerald-500 transition-all"
                           >
                             <div>
-                              <img
-                                src={pet.images[0] || 'https://images.unsplash.com/photo-1552053831-71594a27632d'}
-                                alt={pet.name}
+                              <PetPhoto
+                                src={mainPhotoOf(pet)}
+                                alt={pet.breed}
+                                caption={pet.breed}
                                 className="w-full h-28 object-cover rounded-xl mb-2"
                               />
-                              <div className="font-bold text-xs text-on-surface">{pet.name}</div>
-                              <div className="text-[11px] text-on-surface-variant">{pet.breed} • {pet.ageMonths} mos</div>
+                              <div className="font-bold text-xs text-on-surface">{pet.breed}</div>
+                              <div className="text-[11px] text-on-surface-variant">{pet.ageMonths} months • {pet.gender}</div>
                               <div className="text-xs font-extrabold text-emerald-700 dark:text-emerald-400 mt-1">
                                 {formatPrice(pet.priceUSD)}
                               </div>
@@ -388,7 +388,7 @@ export const PetBreedIdentifierModal: React.FC = () => {
                               }}
                               className="mt-3 w-full py-1.5 bg-[#002045] text-white rounded-xl text-xs font-bold hover:bg-[#1a365d] transition-colors"
                             >
-                              Reserve {pet.name}
+                              Reserve
                             </button>
                           </div>
                         ))}

@@ -1046,7 +1046,7 @@ export const SAMPLE_REVIEWS: CustomerReview[] = [
     date: 'July 28, 2026',
     petName: 'Bella',
     petBreed: 'Golden Retriever',
-    comment: 'YourPets provided white-glove service from start to finish! Bella arrived in flawless health at 2 months old with her complete medical passport and custom starter kit. WhatsApp updates and email order tracking were fantastic.',
+    comment: 'White-glove service from start to finish. Our Golden Retriever arrived in flawless health at 2 months old with a complete medical passport and starter kit. The WhatsApp updates the whole way were fantastic.',
     verifiedBuyer: true,
     location: 'Beverly Hills, CA',
     petPhotoUrl: 'https://images.unsplash.com/photo-1591160690555-5debfba289f0?auto=format&fit=crop&q=80&w=400'
@@ -1059,7 +1059,7 @@ export const SAMPLE_REVIEWS: CustomerReview[] = [
     date: 'June 14, 2026',
     petName: 'Aura',
     petBreed: 'F1 Savannah Cat',
-    comment: 'Finding a legitimate, ethically raised F1 Savannah kitten with verified genetic screening for $300 is an incredible milestone. Highland Exotics and YourPets exceeded all expectations!',
+    comment: 'Finding a legitimate, ethically raised F1 Savannah kitten with verified genetic screening for $300 is remarkable. Highland Exotics and YourPets exceeded every expectation.',
     verifiedBuyer: true,
     location: 'Miami, FL',
     petPhotoUrl: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=400'
@@ -1072,7 +1072,7 @@ export const SAMPLE_REVIEWS: CustomerReview[] = [
     date: 'May 02, 2026',
     petName: 'Milo',
     petBreed: 'French Bulldog',
-    comment: 'The 360° view and full vet records allowed us to reserve Milo with total peace of mind. He has brought so much joy into our apartment. Truly world-class transparency!',
+    comment: 'The photos and full vet records let us reserve our French Bulldog with total peace of mind. He has brought so much joy into our apartment — genuinely world-class transparency.',
     verifiedBuyer: true,
     location: 'New York, NY',
     petPhotoUrl: 'https://images.unsplash.com/photo-1508948956644-0017e845d797?auto=format&fit=crop&q=80&w=400'
@@ -1117,23 +1117,27 @@ export const SAMPLE_ARTICLES: CareArticle[] = [
 
 export const SAMPLE_FAQS = [
   {
-    q: 'Are all baby pets on YourPets fully vaccinated and vet certified?',
-    a: 'Yes, 100%. Every puppy and kitten listed on YourPets undergoes a comprehensive 40-point health check by a licensed veterinarian. All pets are up-to-date on age-appropriate core vaccinations, dewormed, and microchipped prior to delivery.'
+    q: 'How do I pay, and is my card safe?',
+    a: 'No payment is ever taken on this website, so your card details are never typed in here. You reserve the pet you want, then we confirm everything with you on WhatsApp at +1 (330) 516-1283 and agree the payment method together — Chime, Apple Pay, bank transfer or another option that suits you.'
+  },
+  {
+    q: 'When is my reservation actually confirmed?',
+    a: 'Your reservation is held as soon as you place it, but it is only final once we have confirmed it with you on WhatsApp. That is also when we check the pet is still available and answer any questions before you pay anything.'
+  },
+  {
+    q: 'How is shipment arranged?',
+    a: 'Shipment is arranged with you on WhatsApp after your reservation is confirmed. We agree the travel date, book the flight nanny, and send you updates and photos along the way.'
+  },
+  {
+    q: 'Are all pets fully vaccinated and vet certified?',
+    a: 'Yes. Every puppy and kitten has a comprehensive health check by a licensed veterinarian, is up to date on age-appropriate vaccinations, dewormed, and microchipped before delivery.'
   },
   {
     q: 'Why are prices between $150 and $300?',
-    a: 'We work directly with certified master breeders and ethical reserves to offer complete transparency and accessible prices for all standard and rare baby pets ($150 to $300 max).'
+    a: 'We work directly with certified breeders, so there is no middle mark-up. Every standard and rare baby pet on the site is priced between $150 and $300.'
   },
   {
-    q: 'How does the dynamic delivery pricing ($100 vs $200) work?',
-    a: 'Domestic delivery (within USA) is $100 for Express Climate Flight Nanny. International overseas delivery (to another country) is $200 due to customs flight nanny protocols.'
-  },
-  {
-    q: 'What payment methods do you accept?',
-    a: 'We accept Credit/Debit Cards, Chime ($ChimeSign / Chime Pay), Apple Pay / Apple Gift Cards, and Bank Wire Transfer.'
-  },
-  {
-    q: 'How can I contact the concierge directly on WhatsApp?',
-    a: 'You can chat directly with our 24/7 Veterinary Concierge on WhatsApp at +1 (330) 516-1283 for instant photos, flight tracking, and reservation assistance.'
+    q: 'How much is delivery?',
+    a: 'Delivery within the USA is $100. International or overseas delivery is $200, which covers the customs paperwork and flight nanny escort.'
   }
 ];

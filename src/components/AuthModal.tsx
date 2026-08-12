@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Lock, Mail, User, ShieldCheck, ArrowRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { YourPetsLogo } from './YourPetsLogo';
 
 export const AuthModal: React.FC = () => {
   const {
@@ -11,12 +12,11 @@ export const AuthModal: React.FC = () => {
     loginUser,
     loginWithGoogle,
     registerUser,
-    verifyTwoFactorCode,
     resetPassword,
     setRememberedEmail
   } = usePetStore();
 
-  const [mode, setMode] = useState<'login' | 'signup' | 'forgot' | '2fa'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,7 +24,6 @@ export const AuthModal: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
-  const [twoFactorCode, setTwoFactorCode] = useState('');
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [useRemembered, setUseRemembered] = useState(true);
@@ -61,14 +60,10 @@ export const AuthModal: React.FC = () => {
     setIsEmailLoading(false);
     if (!res.success) {
       setErrorMessage(res.message);
-    } else if (res.needs2FA) {
-      setPassword('');
-      setInfoMessage(res.message);
-      setMode('2fa');
-    } else {
-      setPassword('');
-      setErrorMessage(null);
+      return;
     }
+    setPassword('');
+    setErrorMessage(null);
   };
 
   const handleSignupSubmit = async (e: React.FormEvent) => {
@@ -120,15 +115,6 @@ export const AuthModal: React.FC = () => {
     else setErrorMessage(res.message);
   };
 
-  const handleTwoFactorSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-    setIsEmailLoading(true);
-    const res = await verifyTwoFactorCode(twoFactorCode);
-    setIsEmailLoading(false);
-    if (!res.success) setErrorMessage(res.message);
-  };
-
   const isRememberedActive = useRemembered && !!rememberedEmail && mode === 'login';
 
   return (
@@ -144,15 +130,11 @@ export const AuthModal: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-3">
-            <img
-              src="/src/assets/images/yourpets_logo_1785983348124.jpg"
-              alt="YourPets"
-              className="w-11 h-11 rounded-full object-cover border-2 border-white/20 shadow-sm"
-            />
+            <YourPetsLogo className="h-11 w-11" />
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">YourPets VIP Account</span>
               <h2 className="font-serif-display font-bold text-2xl">
-                {mode === 'signup' ? 'Create VIP Account' : mode === 'forgot' ? 'Reset Password' : mode === '2fa' ? 'Verify Email Code' : 'Welcome Back'}
+                {mode === 'signup' ? 'Create Your Account' : mode === 'forgot' ? 'Reset Password' : 'Welcome Back'}
               </h2>
             </div>
           </div>
@@ -332,14 +314,6 @@ export const AuthModal: React.FC = () => {
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface" />
               <button type="submit" className="w-full bg-[#002045] text-white py-3.5 rounded-xl font-bold uppercase tracking-wider">{isEmailLoading ? 'Sending...' : 'Send Password Reset Email'}</button>
               <button type="button" onClick={() => setMode('login')} className="w-full text-center font-bold text-on-surface-variant hover:underline">Back to sign in</button>
-            </form>
-          )}
-
-          {mode === '2fa' && (
-            <form onSubmit={handleTwoFactorSubmit} className="space-y-4 text-xs">
-              <p className="text-on-surface-variant">Enter the 6-digit verification code sent to your email. Codes expire after 10 minutes.</p>
-              <input inputMode="numeric" maxLength={6} required value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface text-center text-lg tracking-[0.5em] font-bold" />
-              <button type="submit" className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold uppercase tracking-wider">{isEmailLoading ? 'Verifying...' : 'Verify & Continue'}</button>
             </form>
           )}
 

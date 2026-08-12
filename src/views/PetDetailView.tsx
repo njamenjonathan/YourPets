@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import {
-  Heart, ShoppingBag, CheckCircle2, ShieldCheck, Stethoscope, Sparkles,
-  Award, Plane, MessageCircle, ArrowLeft, Phone, Mail, FileText, Send,
-  Share2, Eye, Info
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Heart, ShoppingBag, CheckCircle2, ShieldCheck, Stethoscope, Sparkles, Award, MessageCircle, ArrowLeft, Phone, FileText, Send } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { mainPhotoOf, photosFor } from '../lib/petImages';
+import { PetPhoto, Avatar } from '../components/PetPhoto';
+import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
 
 export const PetDetailView: React.FC = () => {
   const {
@@ -18,7 +17,8 @@ export const PetDetailView: React.FC = () => {
     wishlist,
     setActiveTab,
     openReserveModal,
-    setIsChatOpen
+    setIsChatOpen,
+    currentUser
   } = usePetStore();
 
   const pet = pets.find(p => p.id === selectedPetId) || pets[0];
@@ -26,11 +26,16 @@ export const PetDetailView: React.FC = () => {
 
   // Other pets of the same breed or same species
   const sameBreedPets = pets.filter(p => p.breed === pet.breed && p.id !== pet.id);
-  const relatedPets = sameBreedPets.length > 0
+  const relatedPets = (sameBreedPets.length > 0
     ? sameBreedPets
-    : pets.filter(p => p.species === pet.species && p.id !== pet.id).slice(0, 4);
+    : pets.filter(p => p.species === pet.species && p.id !== pet.id)
+  ).slice(0, 4);
 
+  const gallery = photosFor(pet);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+
+  // A different pet means starting from its first photo again.
+  useEffect(() => setActiveImageIdx(0), [pet.id]);
   const [selectedAddons, setSelectedAddons] = useState({
     insurance: true,
     starterKit: true,
@@ -52,7 +57,6 @@ export const PetDetailView: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          petName: pet.name,
           breed: pet.breed,
           gender: pet.gender,
           ageMonths: pet.ageMonths,
@@ -66,10 +70,16 @@ export const PetDetailView: React.FC = () => {
         setAiAnswer(data.answer);
       }
     } catch (err) {
-      setAiAnswer(`${pet.name} is a gentle, highly social ${pet.breed} with clear 40-point veterinary exam results and complete pedigree clearance.`);
+      setAiAnswer(`This ${pet.breed} is gentle and highly social, with clear 40-point veterinary exam results and complete pedigree clearance.`);
     } finally {
       setIsAskingAi(false);
     }
+  };
+
+  // One click from the pet page to checkout, instead of a detour through the cart.
+  const buyNow = () => {
+    addToCart(pet, selectedAddons);
+    if (currentUser?.isLoggedIn) setActiveTab('checkout');
   };
 
   const calculateTotalPrice = () => {
@@ -95,9 +105,11 @@ export const PetDetailView: React.FC = () => {
         {/* Left Column: Gallery (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
           <div className="relative aspect-square w-full rounded-3xl overflow-hidden bg-white dark:bg-[#1f2226] border border-outline-variant/30 shadow-lg">
-            <img
-              src={pet.images[activeImageIdx]}
-              alt={`${pet.name} - ${pet.breed}`}
+            <PetPhoto
+              src={gallery[activeImageIdx]}
+              alt={pet.breed}
+              caption={pet.breed}
+              priority
               className="w-full h-full object-cover transition-all duration-500"
             />
 
@@ -128,20 +140,23 @@ export const PetDetailView: React.FC = () => {
             </button>
           </div>
 
-          {/* Gallery Thumbnails */}
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {pet.images.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveImageIdx(i)}
-                className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 ${
-                  activeImageIdx === i ? 'border-[#002045] dark:border-white scale-105 shadow-md' : 'border-transparent opacity-60'
-                }`}
-              >
-                <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
+          {/* Gallery Thumbnails — only worth showing when there is a choice */}
+          {gallery.length > 1 && (
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {gallery.map((img, i) => (
+                <button
+                  key={img}
+                  onClick={() => setActiveImageIdx(i)}
+                  aria-label={`View photo ${i + 1} of this ${pet.breed}`}
+                  className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                    activeImageIdx === i ? 'border-[#002045] dark:border-white scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <PetPhoto src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right Column: Pricing & Purchase Configuration (5 Cols) */}
@@ -159,7 +174,7 @@ export const PetDetailView: React.FC = () => {
             </h1>
 
             <p className="text-sm font-semibold text-on-surface-variant">
-              Name: <strong>{pet.name}</strong> • {formatAge(pet.ageMonths)} • {pet.gender} • {pet.color}
+              {formatAge(pet.ageMonths)} • {pet.gender} • {pet.color}
             </p>
           </div>
 
@@ -168,8 +183,12 @@ export const PetDetailView: React.FC = () => {
             <div className="flex items-baseline justify-between">
               <span className="text-xs font-bold uppercase text-on-surface-variant">Listing Price</span>
               <span className="font-serif-display font-bold text-3xl text-[#002045] dark:text-emerald-400">
-                {formatPrice(calculateTotalPrice())}
+                {formatPrice(pet.priceUSD)}
               </span>
+            </div>
+            <div className="flex items-baseline justify-between text-xs font-semibold text-on-surface-variant">
+              <span>With selected add-ons</span>
+              <span className="text-on-surface">{formatPrice(calculateTotalPrice())}</span>
             </div>
             <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
               Includes 90-Day Health Guarantee & Complete Vet Passport.
@@ -234,20 +253,42 @@ export const PetDetailView: React.FC = () => {
           {/* Primary Action Buttons */}
           <div className="space-y-3 pt-2">
             <button
-              onClick={() => addToCart(pet, selectedAddons)}
-              className="w-full bg-[#002045] text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-[#1a365d] transition-all shadow-lg flex items-center justify-center gap-2"
-              id="add-to-cart-detail-btn"
+              onClick={() => buyNow()}
+              className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-lg hover:shadow-emerald-600/30 flex items-center justify-center gap-2"
+              id="reserve-now-detail-btn"
             >
-              <ShoppingBag className="w-4 h-4" /> Add Companion to Cart
+              <ShoppingBag className="w-4 h-4" /> Reserve this {pet.species === 'dog' ? 'puppy' : 'kitten'} now
             </button>
 
             <button
+              onClick={() => addToCart(pet, selectedAddons)}
+              className="w-full border border-[#002045] dark:border-white text-[#002045] dark:text-white py-3 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-[#002045] hover:text-white dark:hover:bg-white dark:hover:text-[#002045] transition-all flex items-center justify-center gap-2"
+              id="add-to-cart-detail-btn"
+            >
+              Add to cart &amp; keep browsing
+            </button>
+
+            <a
+              href={whatsappLink(`Hello YourPets, I am interested in the ${pet.breed} (listing ${pet.id}). Is it still available?`)}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full border border-emerald-600 text-emerald-700 dark:text-emerald-300 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all flex items-center justify-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" /> Ask about this {pet.breed} on WhatsApp
+            </a>
+
+            <button
               onClick={() => openReserveModal(pet)}
-              className="w-full gold-badge text-[#574500] py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider hover:brightness-95 transition-all shadow-sm flex items-center justify-center gap-2"
+              className="w-full text-[11px] font-bold text-on-surface-variant hover:text-[#002045] dark:hover:text-white transition-colors underline underline-offset-2"
               id="reserve-deposit-btn"
             >
-              <Sparkles className="w-4 h-4 text-amber-600" /> Reserve Now ($300 Refundable Deposit)
+              Not ready yet? Hold this {pet.species === 'dog' ? 'puppy' : 'kitten'} for 7 days with a $50 refundable deposit
             </button>
+
+            <p className="text-[11px] text-on-surface-variant text-center leading-relaxed">
+              Payment, confirmation and shipment are all arranged with our team on WhatsApp. Nothing is charged on this
+              website.
+            </p>
           </div>
         </div>
       </div>
@@ -305,7 +346,7 @@ export const PetDetailView: React.FC = () => {
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-serif-display font-bold text-2xl">Ask Concierge AI About {pet.name}</h3>
+            <h3 className="font-serif-display font-bold text-2xl">Ask our AI about this {pet.breed}</h3>
             <p className="text-xs text-white/80">Have questions about temperament, apartment suitability, or grooming requirements?</p>
           </div>
         </div>
@@ -378,7 +419,7 @@ export const PetDetailView: React.FC = () => {
         <div className="lg:col-span-4 p-8 rounded-3xl bg-surface-low dark:bg-surface-high border border-outline-variant/30 space-y-4">
           <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Verified Master Breeder</span>
           <div className="flex items-center gap-4">
-            <img src={pet.breeder.photo} alt={pet.breeder.name} className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500" />
+            <Avatar src={pet.breeder.photo} name={pet.breeder.name} className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500 shrink-0" />
             <div>
               <h4 className="font-serif-display font-bold text-base text-on-surface">{pet.breeder.name}</h4>
               <p className="text-xs text-on-surface-variant">{pet.breeder.location}</p>
@@ -396,12 +437,12 @@ export const PetDetailView: React.FC = () => {
             </button>
 
             <a
-              href="https://wa.me/13305161283"
+              href={whatsappLink()}
               target="_blank"
               rel="noreferrer"
               className="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1.5"
             >
-              <Phone className="w-4 h-4" /> WhatsApp: +1 (330) 516-1283
+              <Phone className="w-4 h-4" /> WhatsApp: {WHATSAPP_DISPLAY}
             </a>
           </div>
         </div>
@@ -439,9 +480,10 @@ export const PetDetailView: React.FC = () => {
               className="p-4 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 shadow-sm hover:shadow-md transition-all cursor-pointer group space-y-3"
             >
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-surface-low dark:bg-surface-high">
-                <img
-                  src={otherPet.images[0]}
-                  alt={otherPet.name}
+                <PetPhoto
+                  src={mainPhotoOf(otherPet)}
+                  alt={otherPet.breed}
+                  caption={otherPet.breed}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <span className="absolute top-3 left-3 bg-[#002045]/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-md">
@@ -451,12 +493,12 @@ export const PetDetailView: React.FC = () => {
 
               <div>
                 <div className="flex justify-between items-baseline">
-                  <h4 className="font-serif-display font-bold text-base text-on-surface">{otherPet.name}</h4>
+                  <h4 className="font-serif-display font-bold text-base text-on-surface">{otherPet.breed}</h4>
                   <span className="font-serif-display font-bold text-sm text-[#002045] dark:text-emerald-400">
                     {formatPrice(otherPet.priceUSD)}
                   </span>
                 </div>
-                <p className="text-xs text-on-surface-variant font-medium">{otherPet.breed} • {formatAge(otherPet.ageMonths)}</p>
+                <p className="text-xs text-on-surface-variant font-medium">{formatAge(otherPet.ageMonths)} • {otherPet.gender}</p>
               </div>
 
               <div className="pt-2 border-t border-outline-variant/20 flex justify-between items-center text-[11px] text-emerald-600 font-bold">

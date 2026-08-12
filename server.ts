@@ -15,13 +15,14 @@ async function startServer() {
 
   app.use(express.json({ limit: '10mb' }));
 
-  const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false });
-  const twoFactorCodes = new Map<string, { code: string; expiresAt: number; attempts: number }>();
+  // Protects the order endpoint from abuse (Firebase handles auth rate limiting itself).
+  const orderLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
   const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
   const emailFrom = process.env.ORDER_EMAIL_FROM || 'YourPets <orders@example.com>';
+  const WHATSAPP_DISPLAY = '+1 (330) 516-1283';
+  const WHATSAPP_LINK = 'https://wa.me/13305161283';
   const ownerEmail = process.env.ORDER_NOTIFICATION_EMAIL || 'craftking990@gmail.com';
 
-  const getBearerToken = (header?: string) => header?.startsWith('Bearer ') ? header.slice(7) : '';
   const isEmail = (value: unknown) => typeof value === 'string' && /^\S+@\S+\.\S+$/.test(value);
   const escapeHtml = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char] || char));
 
@@ -43,56 +44,13 @@ async function startServer() {
   };
 
 
-  app.post('/api/auth/signup-check', authLimiter, (req, res) => {
-    const { email } = req.body;
-    if (!isEmail(email)) return res.status(400).json({ error: 'A valid email is required.' });
-    return res.json({ success: true });
-  });
-
-  app.post('/api/auth/send-2fa-code', authLimiter, async (req, res) => {
-    try {
-      const token = getBearerToken(req.headers.authorization);
-      const { email } = req.body;
-      if (!token || !isEmail(email)) return res.status(400).json({ error: 'Valid login and email are required.' });
-      const code = String(Math.floor(100000 + Math.random() * 900000));
-      twoFactorCodes.set(token, { code, expiresAt: Date.now() + 10 * 60 * 1000, attempts: 0 });
-      if (resend) {
-        await resend.emails.send({
-          from: emailFrom,
-          to: email,
-          subject: 'YourPets verification code',
-          html: `<p>Your YourPets verification code is <strong>${code}</strong>.</p><p>This code expires in 10 minutes.</p>`
-        });
-      } else {
-        console.warn('RESEND_API_KEY not set; development 2FA code generated but not emailed.');
-      }
-      return res.json({ success: true });
-    } catch (err: any) {
-      console.error('2FA send error:', err?.message || err);
-      return res.status(500).json({ error: 'Failed to send verification code.' });
-    }
-  });
-
-  app.post('/api/auth/verify-2fa-code', authLimiter, (req, res) => {
-    const token = getBearerToken(req.headers.authorization);
-    const record = token ? twoFactorCodes.get(token) : null;
-    const code = String(req.body.code || '').trim();
-    if (!record) return res.status(400).json({ error: 'Verification code expired. Please log in again.' });
-    if (record.expiresAt < Date.now()) { twoFactorCodes.delete(token); return res.status(400).json({ error: 'Verification code expired. Please log in again.' }); }
-    record.attempts += 1;
-    if (record.attempts > 5) { twoFactorCodes.delete(token); return res.status(429).json({ error: 'Too many incorrect verification attempts.' }); }
-    if (record.code !== code) return res.status(400).json({ error: 'Invalid verification code.' });
-    twoFactorCodes.delete(token);
-    return res.json({ success: true });
-  });
-
   // API Route: Health Check
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', service: 'YourPets API' });
   });
 
   // API Route: Store Owner Order Email Notification
-  app.post('/api/orders/email-notification', async (req, res) => {
+  app.post('/api/orders/email-notification', orderLimiter, async (req, res) => {
     try {
       const {
         orderId,
@@ -116,7 +74,7 @@ async function startServer() {
 
       const formattedTotal = typeof totalAmount === 'number' ? `$${totalAmount.toLocaleString('en-US')}` : `$${totalAmount}`;
 
-      const emailSubject = `🚨 NEW ORDER CONFIRMATION #${orderId} - ${formattedTotal} USD - Target: ${ownerEmail}`;
+      const emailSubject = `New order #${orderId} — ${formattedTotal} USD — ${customerName || 'Customer'}`;
 
       // Build pet details list text
       let petsText = '';
@@ -140,7 +98,6 @@ async function startServer() {
 ===================================================================
          YOURPETS BOUTIQUE - COMPREHENSIVE ORDER SUMMARY
 ===================================================================
-Target Recipient Email : ${ownerEmail}
 Order Reference ID     : #${orderId || 'YP-' + Date.now()}
 Order Timestamp        : ${new Date().toISOString()}
 
@@ -176,40 +133,82 @@ EXACT CALCULATED TOTAL     : ${formattedTotal} USD
 -------------------------------------------------------------------
 Payment Method Selected    : ${paymentMethod || 'WhatsApp Escrow Confirmation'}
 Escrow Guarantee           : 100% Certified Protected Deposit
-Recipient Notification     : Automatically sent to ${ownerEmail}
+Next Step                  : Customer confirms payment & shipment on WhatsApp
 
-===================================================================
-CONFIRMATION: Order summary email successfully queued & dispatched to ${ownerEmail}.
 ===================================================================
       `.trim();
 
-      console.log(`\n====================================================`);
-      console.log(`📩 COMPREHENSIVE ORDER SUMMARY DISPATCH TO: ${ownerEmail}`);
-      console.log(emailBody);
-      console.log(`====================================================\n`);
+      // Confirmation the buyer receives: reserved, not paid, next step is WhatsApp.
+      const buyerBody = `
+Hello ${customerName || 'there'},
+
+Thank you — we have received your reservation request.
+
+  Order reference : #${orderId}
+  Total to settle : ${formattedTotal} USD
+  Delivery        : ${destinationType === 'international' ? 'International / overseas flight' : 'Domestic USA flight'}
+
+WHAT HAPPENS NEXT
+1. Message us on WhatsApp at ${WHATSAPP_DISPLAY} quoting order #${orderId}.
+2. We confirm your pet is still available and agree the payment method with you.
+3. Once payment is confirmed we book the flight nanny and share the schedule.
+
+Your reservation is not final until we have confirmed it with you on WhatsApp.
+No payment is taken through this website.
+
+${WHATSAPP_LINK}
+
+— The YourPets concierge team
+`.trim();
+
+      console.log(`\nNew order #${orderId} (${formattedTotal}) from ${customerName || 'customer'}\n`);
+
+      let ownerEmailSent = false;
+      let buyerEmailSent = false;
 
       if (resend) {
-        await resend.emails.send({
-          from: emailFrom,
-          to: ownerEmail,
-          subject: emailSubject,
-          text: emailBody,
-          html: `<pre style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap;">${escapeHtml(emailBody)}</pre>`
-        });
+        try {
+          await resend.emails.send({
+            from: emailFrom,
+            to: ownerEmail,
+            replyTo: isEmail(email) ? String(email) : undefined,
+            subject: emailSubject,
+            text: emailBody,
+            html: `<pre style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap;">${escapeHtml(emailBody)}</pre>`
+          });
+          ownerEmailSent = true;
+        } catch (mailErr: any) {
+          console.error('Owner order email failed:', mailErr?.message || mailErr);
+        }
+
+        if (isEmail(email)) {
+          try {
+            await resend.emails.send({
+              from: emailFrom,
+              to: String(email),
+              subject: `Your YourPets reservation #${orderId}`,
+              text: buyerBody,
+              html: `<pre style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap;">${escapeHtml(buyerBody)}</pre>`
+            });
+            buyerEmailSent = true;
+          } catch (mailErr: any) {
+            console.error('Buyer confirmation email failed:', mailErr?.message || mailErr);
+          }
+        }
       } else {
-        console.warn('RESEND_API_KEY not set; order email was not sent by an email provider.');
+        console.warn('RESEND_API_KEY not set; order emails were logged but not sent.');
       }
 
+      // The order is always recorded; email delivery is reported honestly so the
+      // customer is never told a message was sent when it was not.
       return res.json({
         success: true,
-        emailSent: true,
-        recipient: ownerEmail,
+        ownerEmailSent,
+        buyerEmailSent,
         orderId,
-        exactPriceUSD: totalAmount,
+        totalUSD: totalAmount,
         formattedTotal,
-        emailSubject,
-        emailBody,
-        message: `Comprehensive order summary email with exact calculated total price of ${formattedTotal} USD automatically sent to ${ownerEmail}`
+        whatsapp: WHATSAPP_DISPLAY
       });
     } catch (err: any) {
       console.error('Order email notification error:', err);

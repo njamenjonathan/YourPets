@@ -1,8 +1,9 @@
 import React from 'react';
-import {
-  CheckCircle2, Clock, Plane, FileText, Download, ShieldCheck, MapPin, Phone
-} from 'lucide-react';
+import { CheckCircle2, Clock, FileText, Download, ShieldCheck, Phone } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { mainPhotoOf } from '../lib/petImages';
+import { PetPhoto } from '../components/PetPhoto';
+import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
 
 export const OrderTrackingView: React.FC = () => {
   const { selectedOrder, orders, formatPrice, setActiveTab } = usePetStore();
@@ -32,12 +33,14 @@ export const OrderTrackingView: React.FC = () => {
     );
   }
 
+  // Only the first step has actually happened when an order is placed — the rest
+  // follow once the order is confirmed on WhatsApp.
   const steps = [
-    { title: 'Payment Confirmed', desc: 'Deposit / Full payment authorized.', done: true },
-    { title: 'Vet Pre-Flight Check', desc: 'Final 40-point health inspection & flight clearance.', done: true },
-    { title: 'Climate Transport Prepared', desc: 'Temperature-controlled cabin crate initialized.', done: true },
-    { title: 'In Transit', desc: 'Accompanied by VIP Nanny en route to destination.', done: false },
-    { title: 'Delivered', desc: 'Safely handed over to home address.', done: false }
+    { title: 'Reservation received', desc: 'We have your details and your pet is held for you.', done: true },
+    { title: 'Confirmed on WhatsApp', desc: 'We agree payment and confirm your pet with you.', done: false },
+    { title: 'Vet pre-flight check', desc: 'Final health inspection and flight clearance.', done: false },
+    { title: 'In transit', desc: 'Accompanied by a flight nanny to your destination.', done: false },
+    { title: 'Delivered', desc: 'Safely handed over at your home address.', done: false }
   ];
 
   return (
@@ -61,22 +64,23 @@ export const OrderTrackingView: React.FC = () => {
       <div className="p-6 rounded-3xl bg-emerald-600 text-white shadow-lg space-y-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 font-bold text-lg">
-            <ShieldCheck className="w-6 h-6 text-emerald-200" /> WhatsApp Escrow Payment Confirmation
+            <ShieldCheck className="w-6 h-6 text-emerald-200" /> Confirm this order on WhatsApp
           </div>
           <p className="text-xs text-emerald-100 max-w-xl">
-            Order #{currentOrder.id} ({currentOrder.pet.breed} - {currentOrder.pet.name}) total of <strong>{formatPrice(currentOrder.totalAmount)}</strong> is held in 100% money-back escrow. Confirm payment and receive live Flight Nanny videos directly on WhatsApp.
+            Your reservation for this {currentOrder.pet.breed} is held for you. Payment and the flight
+            schedule are both arranged with our team on WhatsApp — message us and we will take it from there.
           </p>
         </div>
 
         <a
-          href={`https://wa.me/13305161283?text=${encodeURIComponent(
-            `Hello YourPets Concierge, I placed Order #${currentOrder.id} for my baby pet ${currentOrder.pet.name} (${currentOrder.pet.breed}). Total: ${formatPrice(currentOrder.totalAmount)}. I would like to confirm payment details and flight transport schedule!`
-          )}`}
+          href={whatsappLink(
+            `Hello YourPets, I placed order #${currentOrder.id} for a ${currentOrder.pet.breed}. Total: ${formatPrice(currentOrder.totalAmount)}. Please confirm payment and the flight schedule.`
+          )}
           target="_blank"
           rel="noreferrer"
           className="bg-white text-emerald-900 px-6 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-50 transition-colors shadow-md flex items-center gap-2 whitespace-nowrap"
         >
-          <Phone className="w-4 h-4 text-emerald-600" /> Confirm on WhatsApp (+1 330 516-1283) →
+          <Phone className="w-4 h-4 text-emerald-600" /> Confirm on WhatsApp ({WHATSAPP_DISPLAY}) →
         </a>
       </div>
 
@@ -105,9 +109,9 @@ export const OrderTrackingView: React.FC = () => {
         <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4">
           <h3 className="font-serif-display font-bold text-lg text-on-surface">Companion Information</h3>
           <div className="flex items-center gap-4">
-            <img src={currentOrder.pet.images[0]} alt={currentOrder.pet.name} className="w-20 h-20 rounded-2xl object-cover" />
+            <PetPhoto src={mainPhotoOf(currentOrder.pet)} alt={currentOrder.pet.breed} className="w-20 h-20 rounded-2xl object-cover shrink-0" />
             <div className="text-xs">
-              <h4 className="font-bold text-base text-on-surface">{currentOrder.pet.breed} ({currentOrder.pet.name})</h4>
+              <h4 className="font-bold text-base text-on-surface">{currentOrder.pet.breed}</h4>
               <p className="text-on-surface-variant">{currentOrder.pet.gender} • {currentOrder.pet.color}</p>
               <p className="font-bold text-[#002045] dark:text-emerald-400 mt-1">{formatPrice(currentOrder.totalAmount)}</p>
             </div>

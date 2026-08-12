@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Pet, CartItem, FilterState, Order, Currency, Language, Breeder, UserAccount } from '../types';
+import { Pet, CartItem, FilterState, Order, Currency, Breeder, UserAccount } from '../types';
 import { SAMPLE_PETS, SAMPLE_BREEDERS } from '../data/pets';
 import {
   auth,
   db,
+  firebaseSetup,
   googleProvider,
   signInWithPopup,
   signOut,
@@ -14,13 +15,143 @@ import {
   onAuthStateChanged,
   doc,
   setDoc,
-  getDoc,
   collection,
   query,
-  where,
   onSnapshot,
   orderBy
 } from '../lib/firebase';
+import { where } from 'firebase/firestore';
+
+/**
+ * Keeps a single listing per pet id so the same companion can never show up
+ * twice in the catalog (or in any grid derived from it).
+ */
+const dedupePets = (list: Pet[]): Pet[] => {
+  const seen = new Set<string>();
+  return list.filter(pet => {
+    if (seen.has(pet.id)) return false;
+    seen.add(pet.id);
+    return true;
+  });
+};
+
+const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com').toLowerCase();
+
+/** Builds the app's user object from a Firebase user. */
+const toUserAccount = (fbUser: { uid: string; email: string | null; displayName: string | null }): UserAccount => {
+  const email = (fbUser.email || '').toLowerCase();
+  return {
+    uid: fbUser.uid,
+    name: fbUser.displayName || email.split('@')[0] || 'Member',
+    email,
+    role: email === ADMIN_EMAIL ? 'admin' : 'customer',
+    isLoggedIn: true,
+    memberSince: new Date().getFullYear().toString()
+  };
+};
+
+/**
+ * What a customer sees for each Firebase error, plus — for the failures that
+ * only a developer can fix — a precise note in the console saying what to do.
+ * Every case gets its own message; nothing falls back to a generic one except
+ * genuinely unknown codes.
+ */
+const AUTH_MESSAGES: Record<string, string> = {
+  // --- Things the customer can fix -----------------------------------------
+  'auth/invalid-email': 'That email address does not look right. Please check it and try again.',
+  'auth/missing-email': 'Please enter your email address.',
+  'auth/missing-password': 'Please enter your password.',
+  'auth/user-not-found': 'No account found with that email. Use "Create Account" to register.',
+  'auth/wrong-password': 'That password is not correct. Try again, or use "Forgot password?".',
+  'auth/invalid-credential': 'Email or password is incorrect. If you have not registered yet, use "Create Account".',
+  'auth/invalid-login-credentials': 'Email or password is incorrect. If you have not registered yet, use "Create Account".',
+  'auth/email-already-in-use': 'An account with this email already exists. Please sign in instead, or use "Forgot password?".',
+  'auth/weak-password': 'Please choose a longer password — at least 6 characters.',
+  'auth/user-disabled': 'This account has been disabled. Please contact us on WhatsApp.',
+  'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
+  'auth/network-request-failed': 'Network problem. Check your connection and try again.',
+  'auth/requires-recent-login': 'For security, please sign in again before making this change.',
+
+  // --- Google sign-in ------------------------------------------------------
+  'auth/popup-closed-by-user': 'Google sign-in was closed before it finished. Please try again.',
+  'auth/cancelled-popup-request': 'Google sign-in was interrupted. Please try again.',
+  'auth/popup-blocked': 'Your browser blocked the Google sign-in window. Allow pop-ups for this site and try again.',
+  'auth/account-exists-with-different-credential':
+    'You already have an account with this email using a different sign-in method. Try signing in with email and password.',
+
+  // --- Setup problems: friendly outside, precise in the console ------------
+  'auth/operation-not-allowed':
+    'Email and password sign-up is switched off for this site. Please contact us on WhatsApp and we will set your account up.',
+  'auth/admin-restricted-operation':
+    'New sign-ups are currently closed. Please contact us on WhatsApp and we will set your account up.',
+  'auth/unauthorized-domain':
+    'Sign-in is not allowed from this web address yet. Please contact us on WhatsApp.',
+  'auth/api-key-not-valid': 'Sign-in is temporarily unavailable. Please contact us on WhatsApp.',
+  'auth/invalid-api-key': 'Sign-in is temporarily unavailable. Please contact us on WhatsApp.',
+  'auth/configuration-not-found': 'Sign-in is temporarily unavailable. Please contact us on WhatsApp.',
+  'auth/operation-not-supported-in-this-environment':
+    'This browser cannot complete sign-in. Please try a different browser.'
+};
+
+/** Console guidance for the codes that only the site owner can resolve. */
+const AUTH_SETUP_HELP: Record<string, string> = {
+  'auth/operation-not-allowed':
+    `Email/Password sign-in is DISABLED in Firebase project "${firebaseSetup.projectId}". ` +
+    'Fix: Firebase console -> Authentication -> Sign-in method -> Email/Password -> Enable. ' +
+    'If you do not have access to that project, create your own and set VITE_FIREBASE_API_KEY, ' +
+    'VITE_FIREBASE_PROJECT_ID and VITE_FIREBASE_APP_ID in .env.',
+  'auth/admin-restricted-operation':
+    `Public sign-up is blocked in Firebase project "${firebaseSetup.projectId}". ` +
+    'Fix: Firebase console -> Authentication -> Settings -> User actions -> allow "Create (sign-up)".',
+  'auth/unauthorized-domain':
+    `"${window.location.hostname}" is not an authorised domain for project "${firebaseSetup.projectId}". ` +
+    'Fix: Firebase console -> Authentication -> Settings -> Authorized domains -> Add domain.',
+  'auth/api-key-not-valid':
+    'The Firebase API key is rejected. Check VITE_FIREBASE_API_KEY, or the apiKey in firebase-applet-config.json, ' +
+    'against Firebase console -> Project settings -> General -> Your apps -> SDK setup and config.',
+  'auth/invalid-api-key':
+    'The Firebase API key is malformed. Check VITE_FIREBASE_API_KEY or firebase-applet-config.json.',
+  'auth/configuration-not-found':
+    `Firebase Authentication has not been set up on project "${firebaseSetup.projectId}". ` +
+    'Fix: Firebase console -> Authentication -> Get started.'
+};
+
+/**
+ * Finds the entry for a code. Firebase sometimes appends the server text to the
+ * code itself — a bad key arrives as
+ * "auth/api-key-not-valid.-please-pass-a-valid-api-key." — so an exact lookup
+ * is not enough; fall back to the longest matching prefix.
+ */
+const lookupByCode = <T,>(table: Record<string, T>, code: string): T | undefined => {
+  if (table[code]) return table[code];
+  const prefix = Object.keys(table)
+    .filter(key => code.startsWith(key))
+    .sort((a, b) => b.length - a.length)[0];
+  return prefix ? table[prefix] : undefined;
+};
+
+/** Turns a Firebase error into a message for the customer. */
+const authErrorMessage = (err: unknown): string => {
+  const code = (err as { code?: string })?.code || '';
+
+  const setupHelp = lookupByCode(AUTH_SETUP_HELP, code);
+  if (setupHelp) {
+    console.error(`[YourPets auth] ${code}\n  ${setupHelp}`);
+  } else if (code) {
+    console.warn(`[YourPets auth] ${code}`);
+  }
+
+  const message = lookupByCode(AUTH_MESSAGES, code);
+  if (message) return message;
+
+  if (!firebaseSetup.looksConfigured) {
+    console.error('[YourPets auth] Firebase settings are missing or placeholders — see src/lib/firebase.ts.');
+    return 'Sign-in is not available right now. Please contact us on WhatsApp.';
+  }
+
+  console.error('[YourPets auth] Unhandled error:', err);
+  return (err as { message?: string })?.message || 'Something went wrong. Please try again.';
+};
 
 const CURRENCY_RATES: Record<Currency, { symbol: string; rate: number }> = {
   USD: { symbol: '$', rate: 1.0 },
@@ -34,22 +165,17 @@ interface PetStoreContextType {
   pets: Pet[];
   breeders: Breeder[];
   currency: Currency;
-  language: Language;
   darkMode: boolean;
   wishlist: string[];
   cart: CartItem[];
-  recentlyViewed: Pet[];
-  compareList: Pet[];
   orders: Order[];
   activeTab: string;
   selectedPetId: string | null;
   selectedOrder: Order | null;
-  selectedBreeder: Breeder | null;
   searchQuery: string;
   filterState: FilterState;
   isQuizOpen: boolean;
   isBreedIdentifierOpen: boolean;
-  isCompareOpen: boolean;
   isQuickViewOpen: boolean;
   quickViewPet: Pet | null;
   isChatOpen: boolean;
@@ -59,11 +185,11 @@ interface PetStoreContextType {
 
   // Authentication State & Actions
   currentUser: UserAccount | null;
+  isAuthLoading: boolean;
   rememberedEmail: string;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
-  loginUser: (email: string, password: string) => Promise<{ success: boolean; message: string; needs2FA?: boolean }>;
-  verifyTwoFactorCode: (code: string) => Promise<{ success: boolean; message: string }>;
+  loginUser: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; message: string }>;
   loginWithGoogle: () => Promise<{ success: boolean; message: string }>;
   registerUser: (name: string, email: string, password: string) => Promise<{ success: boolean; message: string }>;
@@ -72,29 +198,24 @@ interface PetStoreContextType {
 
   // Actions
   setCurrency: (c: Currency) => void;
-  setLanguage: (l: Language) => void;
   setDarkMode: (d: boolean | ((prev: boolean) => boolean)) => void;
   setActiveTab: (tab: string) => void;
   setSelectedPetId: (id: string | null) => void;
   setSelectedOrder: (order: Order | null) => void;
-  setSelectedBreeder: (breeder: Breeder | null) => void;
   setSearchQuery: (query: string) => void;
   setFilterState: React.Dispatch<React.SetStateAction<FilterState>>;
   setIsQuizOpen: (open: boolean) => void;
   setIsBreedIdentifierOpen: (open: boolean) => void;
-  setIsCompareOpen: (open: boolean) => void;
   setIsChatOpen: (open: boolean) => void;
   setQuickViewPet: (pet: Pet | null) => void;
   openReserveModal: (pet: Pet) => void;
   closeReserveModal: () => void;
-  
+
   toggleWishlist: (petId: string) => void;
   addToCart: (pet: Pet, addOns?: { insurance: boolean; starterKit: boolean; vipTransport: boolean }) => void;
   removeFromCart: (petId: string) => void;
   updateCartAddons: (petId: string, addOns: { insurance: boolean; starterKit: boolean; vipTransport: boolean }) => void;
   clearCart: () => void;
-  toggleCompare: (pet: Pet) => void;
-  recordPetView: (pet: Pet) => void;
   placeOrder: (orderDetails: Partial<Order>) => Order;
   showNotification: (msg: string) => void;
   
@@ -107,7 +228,7 @@ interface PetStoreContextType {
   deletePet: (petId: string) => void;
 }
 
-const initialFilterState: FilterState = {
+export const INITIAL_FILTER_STATE: FilterState = {
   species: [],
   breedTypes: [],
   selectedBreeds: [],
@@ -119,33 +240,27 @@ const initialFilterState: FilterState = {
   traits: [],
   vaccinatedOnly: false,
   microchippedOnly: false,
-  searchQuery: '',
   sortBy: 'recommended'
 };
 
 const PetStoreContext = createContext<PetStoreContextType | undefined>(undefined);
 
 export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [pets, setPets] = useState<Pet[]>(SAMPLE_PETS);
+  const [pets, setPets] = useState<Pet[]>(() => dedupePets(SAMPLE_PETS));
   const [breeders] = useState<Breeder[]>(SAMPLE_BREEDERS);
   const [currency, setCurrency] = useState<Currency>('USD');
-  const [language, setLanguage] = useState<Language>('en');
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [recentlyViewed, setRecentlyViewed] = useState<Pet[]>([]);
-  const [compareList, setCompareList] = useState<Pet[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTabState] = useState<string>(() => window.location.hash.replace('#/', '') || 'home');
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [selectedBreeder, setSelectedBreeder] = useState<Breeder | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [filterState, setFilterState] = useState<FilterState>(initialFilterState);
-  
+  const [filterState, setFilterState] = useState<FilterState>(INITIAL_FILTER_STATE);
+
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isBreedIdentifierOpen, setIsBreedIdentifierOpen] = useState(false);
-  const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [quickViewPet, setQuickViewPetState] = useState<Pet | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -155,53 +270,52 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // User Authentication State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [rememberedEmail, setRememberedEmailState] = useState<string>(() => {
-    return localStorage.getItem('yourpets_remembered_email') || 'eleanor.vance@beverlyhills.org';
-  });
+  const [rememberedEmail, setRememberedEmailState] = useState<string>(
+    () => localStorage.getItem('yourpets_remembered_email') || ''
+  );
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  // True until Firebase has told us whether a session exists, so gated pages do
+  // not flash "sign in required" at someone who is already signed in.
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
-    const saved = localStorage.getItem('yourpets_current_user');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* ignore */ }
-    }
-    return null;
-  });
-
-  // Listen to Firebase Auth state changes
+  // Firebase is the single source of truth for the session: it restores the
+  // signed-in user on reload and clears it on sign-out.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      if (fbUser) {
-        const userEmail = fbUser.email || '';
-        const userDisplayName = fbUser.displayName || userEmail.split('@')[0] || 'VIP Member';
-        
-        const userObj: UserAccount = {
-          name: userDisplayName,
-          email: userEmail,
-          isLoggedIn: true,
-          memberSince: '2026',
-          uid: fbUser.uid,
-          role: userEmail === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer',
-          twoFactorVerified: sessionStorage.getItem(`yourpets_2fa_${fbUser.uid}`) === 'verified'
-        };
+      setIsAuthLoading(false);
 
-        setCurrentUser(userObj);
-        setRememberedEmail(userEmail);
-        localStorage.setItem('yourpets_current_user', JSON.stringify(userObj));
+      if (!fbUser) {
+        setCurrentUser(null);
+        return;
+      }
 
-        // Save/Sync user profile to Firestore
-        try {
-          await setDoc(doc(db, 'users', fbUser.uid), {
+      const userObj = toUserAccount(fbUser);
+
+      // On sign-up this listener can fire before updateProfile() has stored the
+      // display name, which would replace the name just entered with the part
+      // of the email before the @. Keep the better name when that happens.
+      setCurrentUser(prev =>
+        prev && prev.uid === userObj.uid && !fbUser.displayName ? { ...userObj, name: prev.name } : userObj
+      );
+      setRememberedEmail(userObj.email);
+
+      // Mirror the profile into Firestore; failures here must never block login.
+      try {
+        await setDoc(
+          doc(db, 'users', fbUser.uid),
+          {
             uid: fbUser.uid,
-            displayName: userDisplayName,
-            name: userDisplayName,
-            email: userEmail,
-            role: userEmail === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer',
+            name: userObj.name,
+            displayName: userObj.name,
+            email: userObj.email,
+            role: userObj.role,
             photoURL: fbUser.photoURL || '',
-            createdAt: new Date().toISOString()
-          }, { merge: true });
-        } catch (e) {
-          console.warn('Firestore user sync warning:', e);
-        }
+            updatedAt: new Date().toISOString()
+          },
+          { merge: true }
+        );
+      } catch (e) {
+        console.warn('Firestore user sync warning:', e);
       }
     });
 
@@ -231,146 +345,81 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const loginWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const fbUser = result.user;
-      const userEmail = fbUser.email || '';
-      const userDisplayName = fbUser.displayName || userEmail.split('@')[0] || 'VIP Member';
-      const role = userEmail === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer';
-
-      const userObj: UserAccount = {
-        uid: fbUser.uid,
-        name: userDisplayName,
-        email: userEmail,
-        role,
-        isLoggedIn: true,
-        twoFactorVerified: true,
-        memberSince: '2026'
-      };
-
-      sessionStorage.setItem(`yourpets_2fa_${fbUser.uid}`, 'verified');
+      const userObj = toUserAccount(result.user);
       setCurrentUser(userObj);
-      setRememberedEmail(userEmail);
-      await setDoc(doc(db, 'users', fbUser.uid), {
-        uid: fbUser.uid,
-        displayName: userDisplayName,
-        name: userDisplayName,
-        email: userEmail,
-        role,
-        photoURL: fbUser.photoURL || '',
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-
+      setRememberedEmail(userObj.email);
       setIsAuthModalOpen(false);
-      showNotification(`Welcome, ${userDisplayName}! Signed in with Google.`);
-      return { success: true, message: 'Signed in with Google successfully' };
-    } catch (err: any) {
-      return { success: false, message: err?.message || 'Google Sign-In failed. Please try again.' };
+      showNotification(`Welcome, ${userObj.name}!`);
+      return { success: true, message: 'Signed in with Google.' };
+    } catch (err) {
+      return { success: false, message: authErrorMessage(err) };
     }
   };
 
   const loginUser = async (email: string, password: string) => {
     const cleanEmail = email.trim().toLowerCase();
-    if (!/^\S+@\S+\.\S+$/.test(cleanEmail) || password.length < 6) {
-      return { success: false, message: 'Enter a valid email and password.' };
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      return { success: false, message: 'Please enter a valid email address.' };
+    }
+    if (password.length < 6) {
+      return { success: false, message: 'Please enter your password (at least 6 characters).' };
     }
     try {
       const result = await signInWithEmailAndPassword(auth, cleanEmail, password);
-      const token = await result.user.getIdToken();
-      const res = await fetch('/api/auth/send-2fa-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ email: cleanEmail })
-      });
-      if (!res.ok) throw new Error((await res.json()).error || 'Unable to send verification code.');
-      setCurrentUser({
-        uid: result.user.uid,
-        name: result.user.displayName || cleanEmail.split('@')[0],
-        email: cleanEmail,
-        role: cleanEmail === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer',
-        isLoggedIn: false,
-        twoFactorVerified: false,
-        memberSince: '2026'
-      });
-      setRememberedEmail(cleanEmail);
-      return { success: true, needs2FA: true, message: 'Verification code sent to your email.' };
-    } catch (err: any) {
-      return { success: false, message: err?.message || 'Login failed.' };
-    }
-  };
-
-  const verifyTwoFactorCode = async (code: string) => {
-    if (!auth.currentUser) return { success: false, message: 'Please log in again.' };
-    if (!/^\d{6}$/.test(code.trim())) return { success: false, message: 'Enter the 6-digit code.' };
-    try {
-      const token = await auth.currentUser.getIdToken();
-      const res = await fetch('/api/auth/verify-2fa-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ code: code.trim() })
-      });
-      const data = await res.json();
-      if (!res.ok) return { success: false, message: data.error || 'Invalid verification code.' };
-      const email = auth.currentUser.email || '';
-      const userObj: UserAccount = {
-        uid: auth.currentUser.uid,
-        name: auth.currentUser.displayName || email.split('@')[0],
-        email,
-        role: email === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer',
-        isLoggedIn: true,
-        twoFactorVerified: true,
-        memberSince: '2026'
-      };
-      sessionStorage.setItem(`yourpets_2fa_${auth.currentUser.uid}`, 'verified');
+      const userObj = toUserAccount(result.user);
       setCurrentUser(userObj);
+      setRememberedEmail(userObj.email);
       setIsAuthModalOpen(false);
       showNotification(`Welcome back, ${userObj.name}!`);
-      return { success: true, message: 'Login verified.' };
-    } catch (err: any) {
-      return { success: false, message: err?.message || 'Verification failed.' };
+      return { success: true, message: 'Signed in.' };
+    } catch (err) {
+      return { success: false, message: authErrorMessage(err) };
     }
   };
 
   const registerUser = async (name: string, email: string, password: string) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim();
-    if (cleanName.length < 2 || !/^\S+@\S+\.\S+$/.test(cleanEmail) || password.length < 6) {
-      return { success: false, message: 'Enter a name, valid email, and password of at least 6 characters.' };
+    if (cleanName.length < 2) {
+      return { success: false, message: 'Please enter your full name.' };
+    }
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      return { success: false, message: 'Please enter a valid email address.' };
+    }
+    if (password.length < 6) {
+      return { success: false, message: 'Please choose a password with at least 6 characters.' };
     }
     try {
-      const res = await fetch('/api/auth/signup-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: cleanEmail }) });
-      if (!res.ok) throw new Error((await res.json()).error || 'Too many signup attempts.');
       const cred = await createUserWithEmailAndPassword(auth, cleanEmail, password);
       await updateProfile(cred.user, { displayName: cleanName });
-      const role = cleanEmail === (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com') ? 'admin' : 'customer';
-      await setDoc(doc(db, 'users', cred.user.uid), { uid: cred.user.uid, name: cleanName, displayName: cleanName, email: cleanEmail, role, createdAt: new Date().toISOString() }, { merge: true });
-      sessionStorage.setItem(`yourpets_2fa_${cred.user.uid}`, 'verified');
-      setCurrentUser({ uid: cred.user.uid, name: cleanName, email: cleanEmail, role, isLoggedIn: true, twoFactorVerified: true, memberSince: new Date().getFullYear().toString() });
+      const userObj = { ...toUserAccount(cred.user), name: cleanName };
+      setCurrentUser(userObj);
       setRememberedEmail(cleanEmail);
       setIsAuthModalOpen(false);
-      showNotification(`Account created! Welcome, ${cleanName}!`);
-      return { success: true, message: 'Account registered' };
-    } catch (err: any) {
-      return { success: false, message: err?.message || 'Account registration failed.' };
+      showNotification(`Account created. Welcome, ${cleanName}!`);
+      return { success: true, message: 'Account created.' };
+    } catch (err) {
+      return { success: false, message: authErrorMessage(err) };
     }
   };
 
   const resetPassword = async (email: string) => {
     const cleanEmail = email.trim().toLowerCase();
-    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) return { success: false, message: 'Enter a valid email address.' };
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      return { success: false, message: 'Please enter a valid email address.' };
+    }
     try {
       await sendPasswordResetEmail(auth, cleanEmail);
-      return { success: true, message: 'Password reset email sent.' };
-    } catch (err: any) {
-      return { success: false, message: err?.message || 'Could not send password reset email.' };
+      return { success: true, message: 'Password reset email sent. Check your inbox.' };
+    } catch (err) {
+      return { success: false, message: authErrorMessage(err) };
     }
   };
 
   const logoutUser = () => {
-    signOut(auth).catch(() => {});
-    if (currentUser) {
-      setCurrentUser({ ...currentUser, isLoggedIn: false });
-      localStorage.setItem('yourpets_current_user', JSON.stringify({ ...currentUser, isLoggedIn: false }));
-      showNotification('Logged out successfully');
-    }
+    signOut(auth)
+      .then(() => showNotification('Signed out.'))
+      .catch(() => showNotification('Could not sign out. Please try again.'));
   };
 
   useEffect(() => {
@@ -381,18 +430,39 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [darkMode]);
 
+  /**
+   * Loads orders from Firestore for the signed-in member.
+   *
+   * Admins subscribe to every order; a customer subscribes only to their own.
+   * The `where` clause is not optional for customers: firestore.rules permits
+   * reads only where userId matches the caller, and Firestore rejects a query
+   * whose scope is wider than the rules allow rather than trimming the result.
+   */
   useEffect(() => {
-    if (currentUser?.role !== 'admin' || !currentUser.isLoggedIn) return;
-    const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    if (!currentUser?.isLoggedIn) {
+      // Signed out (or between accounts) — drop the previous member's orders.
+      setOrders([]);
+      return;
+    }
+
+    const isAdmin = currentUser.role === 'admin';
+    const uid = currentUser.uid;
+    if (!isAdmin && !uid) return;
+
+    const ordersQuery = isAdmin
+      ? query(collection(db, 'orders'), orderBy('createdAt', 'desc'))
+      : query(collection(db, 'orders'), where('userId', '==', uid), orderBy('createdAt', 'desc'));
+
     const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
-      const remoteOrders = snapshot.docs.map((orderDoc) => ({ id: orderDoc.id, ...orderDoc.data() } as Partial<Order> & { createdAt?: string }));
+      const remoteOrders = snapshot.docs.map((orderDoc) => ({ id: orderDoc.id, ...orderDoc.data() } as Partial<Order> & { createdAt?: string; petId?: string }));
       setOrders(prev => {
         const merged = [...prev];
         remoteOrders.forEach(remote => {
           if (!merged.some(order => order.id === remote.id)) {
             merged.push({
               id: remote.id || 'unknown',
-              pet: pets[0],
+              // Restore the real pet from the stored petId; fall back only if it is gone.
+              pet: pets.find(p => p.id === remote.petId) || pets[0],
               orderDate: typeof remote.createdAt === 'string' ? new Date(remote.createdAt).toLocaleDateString() : 'Recent',
               status: (remote.status as Order['status']) || 'Pending',
               subtotal: Number(remote.subtotal || 0),
@@ -414,9 +484,9 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
         return merged;
       });
-    }, (err) => console.warn('Admin orders subscription warning:', err));
+    }, (err) => console.warn('Orders subscription warning:', err));
     return () => unsubscribe();
-  }, [currentUser?.role, currentUser?.isLoggedIn, pets]);
+  }, [currentUser?.role, currentUser?.isLoggedIn, currentUser?.uid, pets]);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -471,10 +541,10 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (index > -1) {
         const updated = [...prev];
         updated[index] = { pet, selectedAddOns: addOns, totalPriceUSD };
-        showNotification(`${pet.name} updated in cart`);
+        showNotification(`${pet.breed} updated in cart`);
         return updated;
       } else {
-        showNotification(`${pet.name} added to cart!`);
+        showNotification(`${pet.breed} added to cart!`);
         return [...prev, { pet, selectedAddOns: addOns, totalPriceUSD }];
       }
     });
@@ -509,29 +579,6 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const clearCart = () => {
     setCart([]);
-  };
-
-  const toggleCompare = (pet: Pet) => {
-    setCompareList(prev => {
-      const exists = prev.find(p => p.id === pet.id);
-      if (exists) {
-        showNotification(`${pet.breed} removed from comparison`);
-        return prev.filter(p => p.id !== pet.id);
-      }
-      if (prev.length >= 4) {
-        showNotification('Maximum 4 pets can be compared side-by-side');
-        return prev;
-      }
-      showNotification(`${pet.breed} added to comparison list`);
-      return [...prev, pet];
-    });
-  };
-
-  const recordPetView = (pet: Pet) => {
-    setRecentlyViewed(prev => {
-      const filtered = prev.filter(p => p.id !== pet.id);
-      return [pet, ...filtered].slice(0, 6);
-    });
   };
 
   const setQuickViewPet = (pet: Pet | null) => {
@@ -588,7 +635,7 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       phone: details.phone || '+1 (330) 516-1283',
       paymentMethod: details.paymentMethod || 'Credit Card (Visa)',
       buyerEmail: currentUser?.email,
-      items: cart.map(item => ({ productName: item.pet.name, quantity: 1, price: item.pet.priceUSD, total: item.totalPriceUSD })),
+      items: cart.map(item => ({ productName: `${item.pet.breed} (${item.pet.id})`, quantity: 1, price: item.pet.priceUSD, total: item.totalPriceUSD })),
       depositPaid: details.depositPaid || false,
       depositAmount: details.depositAmount || 0,
     };
@@ -608,6 +655,12 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         cityStateZip: newOrder.cityStateZip,
         deliveryCost,
         totalAmount,
+        // Written so a reloaded order is complete rather than zeroed out.
+        subtotal,
+        addonsTotal,
+        taxes,
+        trackingNumber: newOrder.trackingNumber,
+        estimatedDeliveryDate: newOrder.estimatedDeliveryDate,
         paymentMethod: newOrder.paymentMethod,
         status: newOrder.status,
         createdAt: new Date().toISOString()
@@ -619,7 +672,7 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     clearCart();
     setSelectedOrder(newOrder);
-    showNotification(`Order #${newOrder.id} placed! Exact total of $${totalAmount} emailed to craftking990@gmail.com.`);
+    showNotification(`Order #${newOrder.id} placed! Confirmation of your $${totalAmount} total is on its way to you.`);
     return newOrder;
   };
 
@@ -641,8 +694,12 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Admin CRUD
   const addPet = (newPet: Pet) => {
-    setPets(prev => [newPet, ...prev]);
-    showNotification(`New pet ${newPet.name} added to catalog!`);
+    if (pets.some(p => p.id === newPet.id)) {
+      showNotification('That listing is already in the catalog.');
+      return;
+    }
+    setPets(prev => dedupePets([newPet, ...prev]));
+    showNotification(`New ${newPet.breed} listing added to the catalog.`);
   };
 
   const updatePet = (petId: string, updated: Partial<Pet>) => {
@@ -661,22 +718,17 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         pets,
         breeders,
         currency,
-        language,
         darkMode,
         wishlist,
         cart,
-        recentlyViewed,
-        compareList,
         orders,
         activeTab,
         selectedPetId,
         selectedOrder,
-        selectedBreeder,
         searchQuery,
         filterState,
         isQuizOpen,
         isBreedIdentifierOpen,
-        isCompareOpen,
         isQuickViewOpen,
         quickViewPet,
         isChatOpen,
@@ -685,29 +737,26 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         notification,
 
         currentUser,
+        isAuthLoading,
         rememberedEmail,
         isAuthModalOpen,
         setIsAuthModalOpen,
         loginUser,
         loginWithGoogle,
-        verifyTwoFactorCode,
         resetPassword,
         registerUser,
         logoutUser,
         setRememberedEmail,
 
         setCurrency,
-        setLanguage,
         setDarkMode,
         setActiveTab,
         setSelectedPetId,
         setSelectedOrder,
-        setSelectedBreeder,
         setSearchQuery,
         setFilterState,
         setIsQuizOpen,
         setIsBreedIdentifierOpen,
-        setIsCompareOpen,
         setIsChatOpen,
         setQuickViewPet,
         openReserveModal,
@@ -718,8 +767,6 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         removeFromCart,
         updateCartAddons,
         clearCart,
-        toggleCompare,
-        recordPetView,
         placeOrder,
         showNotification,
 

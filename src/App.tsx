@@ -5,7 +5,6 @@ import { Footer } from './components/Footer';
 import { MobileBottomNav } from './components/MobileBottomNav';
 
 import { QuickViewModal } from './components/QuickViewModal';
-import { ComparePetsModal } from './components/ComparePetsModal';
 import { AiQuizModal } from './components/AiQuizModal';
 import { ReserveModal } from './components/ReserveModal';
 import { LiveChatDrawer } from './components/LiveChatDrawer';
@@ -80,7 +79,6 @@ const MainContent: React.FC = () => {
 
       {/* Global Modals & Drawers */}
       <QuickViewModal />
-      <ComparePetsModal />
       <AiQuizModal />
       <ReserveModal />
       <LiveChatDrawer />

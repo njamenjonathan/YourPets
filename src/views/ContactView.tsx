@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Send, CheckCircle2, Clock, MessageCircle } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
 
 export const ContactView: React.FC = () => {
   const { showNotification } = usePetStore();
@@ -35,12 +36,12 @@ export const ContactView: React.FC = () => {
               For instant live photos, video calls with baby puppies/kittens, or flight nanny scheduling, chat with us directly on WhatsApp:
             </p>
             <a
-              href="https://wa.me/13305161283"
+              href={whatsappLink()}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 bg-white text-emerald-900 px-5 py-3 rounded-2xl font-bold text-xs hover:bg-emerald-50 transition-colors shadow-md"
             >
-              <Phone className="w-4 h-4 text-emerald-600" /> Chat on WhatsApp: +1 (330) 516-1283
+              <Phone className="w-4 h-4 text-emerald-600" /> Chat on WhatsApp: {WHATSAPP_DISPLAY}
             </a>
           </div>
 
@@ -52,7 +53,7 @@ export const ContactView: React.FC = () => {
                 <MapPin className="w-4 h-4 text-emerald-600 flex-shrink-0" /> Beverly Hills, CA 90210 & Aspen, CO
               </p>
               <p className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-emerald-600 flex-shrink-0" /> +1 (330) 516-1283 (Direct WhatsApp)
+                <Phone className="w-4 h-4 text-emerald-600 flex-shrink-0" /> {WHATSAPP_DISPLAY} (Direct WhatsApp)
               </p>
               <p className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-emerald-600 flex-shrink-0" /> craftking990@gmail.com

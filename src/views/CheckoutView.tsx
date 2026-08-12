@@ -1,31 +1,44 @@
-import React, { useState } from 'react';
-import { CreditCard, ShieldCheck, Lock, CheckCircle2, Plane, MapPin, Phone, Mail, MessageCircle, Gift, ShieldAlert, FileText } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { CreditCard, ShieldCheck, CheckCircle2, Plane, MessageCircle, Smartphone, Building2, Loader2, AlertCircle } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
+import { SignInRequired } from '../components/SignInRequired';
+import { sendOrderEmail } from '../lib/orderEmail';
+
+type PaymentMethod = 'whatsapp' | 'chime' | 'applepay' | 'wire';
+
+const PAYMENT_OPTIONS: Array<{ id: PaymentMethod; label: string; hint: string; icon: React.ReactNode }> = [
+  { id: 'whatsapp', label: 'Decide on WhatsApp', hint: 'We walk you through the options', icon: <MessageCircle className="w-4 h-4" /> },
+  { id: 'chime', label: 'Chime', hint: 'Send to our Chime tag', icon: <Smartphone className="w-4 h-4" /> },
+  { id: 'applepay', label: 'Apple Pay', hint: 'Pay from your Apple wallet', icon: <CreditCard className="w-4 h-4" /> },
+  { id: 'wire', label: 'Bank transfer', hint: 'We send the details', icon: <Building2 className="w-4 h-4" /> }
+];
+
+const PAYMENT_LABELS: Record<PaymentMethod, string> = {
+  whatsapp: 'To be agreed on WhatsApp',
+  chime: 'Chime',
+  applepay: 'Apple Pay',
+  wire: 'Bank transfer'
+};
 
 export const CheckoutView: React.FC = () => {
-  const { cart, formatPrice, placeOrder, setActiveTab, currentUser, setIsAuthModalOpen, showNotification } = usePetStore();
+  const { cart, formatPrice, placeOrder, setActiveTab, currentUser, showNotification } = usePetStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [emailSuccessMessage, setEmailSuccessMessage] = useState<string | null>(null);
+  const [emailState, setEmailState] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
+  const [emailError, setEmailError] = useState<string | null>(null);
 
-  const [customerName, setCustomerName] = useState('');
-  const [email, setEmail] = useState('');
+  // A ref, not state: state updates are async, so two fast clicks could both
+  // pass an isSubmitting check before React re-rendered.
+  const submissionInFlight = useRef(false);
+
+  const [customerName, setCustomerName] = useState(currentUser?.name || '');
+  const [email, setEmail] = useState(currentUser?.email || '');
   const [phone, setPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [cityStateZip, setCityStateZip] = useState('');
-  
-  // Destination Location Pricing ($100 domestic vs $200 international)
   const [destinationType, setDestinationType] = useState<'domestic' | 'international'>('domestic');
-
-  // Payment Methods: whatsapp, chime, applepay, wire
-  const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'chime' | 'applepay' | 'wire'>('whatsapp');
-  
-  // Chime payment state
-  const [chimeSign, setChimeSign] = useState('');
-
-  // Apple Pay / Gift card state
-  const [appleGiftCardCode, setAppleGiftCardCode] = useState('');
-  const [giftCardApplied, setGiftCardApplied] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('whatsapp');
 
   if (!currentUser?.isLoggedIn) {
     return (
@@ -34,19 +47,10 @@ export const CheckoutView: React.FC = () => {
           <h1 className="font-serif-display font-bold text-3xl">Checkout</h1>
         </div>
 
-        <div className="p-16 text-center bg-white dark:bg-[#1f2226] rounded-3xl border border-outline-variant/30 space-y-4 shadow-sm">
-          <Lock className="w-16 h-16 mx-auto text-amber-500" />
-          <h3 className="font-serif-display font-bold text-2xl text-on-surface">Sign In Required</h3>
-          <p className="text-xs text-on-surface-variant max-w-sm mx-auto">
-            Only logged in accounts can place orders and view their wishlist and cart.
-          </p>
-          <button
-            onClick={() => setIsAuthModalOpen(true)}
-            className="bg-[#002045] text-white px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[#1a365d] transition-colors shadow-md"
-          >
-            Sign In / Register Account
-          </button>
-        </div>
+        <SignInRequired
+          title="Sign in to reserve"
+          message="You need an account to reserve a pet, so we can keep your order and delivery details together."
+        />
       </div>
     );
   }
@@ -60,47 +64,42 @@ export const CheckoutView: React.FC = () => {
     return acc + add;
   }, 0);
 
-  // $100 for Same Country (USA), $200 for International/Overseas
+  // $100 within the USA, $200 for overseas destinations.
   const deliveryCost = destinationType === 'domestic' ? 100 : 200;
   const taxes = Math.round((subtotal + addonsTotal) * 0.08);
-  const rawTotal = subtotal + addonsTotal + deliveryCost + taxes;
-  const totalAmount = giftCardApplied ? Math.max(0, rawTotal - 100) : rawTotal;
-
-  const handleApplyGiftCard = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (appleGiftCardCode.trim().length >= 8) {
-      setGiftCardApplied(true);
-    }
-  };
+  const totalAmount = subtotal + addonsTotal + deliveryCost + taxes;
 
   const handleCompleteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Guard against double submission (double click, Enter key, slow network).
+    if (submissionInFlight.current) return;
+
     const trimmedName = customerName.trim();
     const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedName || !/^\S+@\S+\.\S+$/.test(trimmedEmail) || phone.trim().length < 7 || deliveryAddress.trim().length < 5 || cityStateZip.trim().length < 3 || cart.length === 0) {
-      showNotification('Please complete all checkout fields with valid information.');
+    if (
+      !trimmedName ||
+      !/^\S+@\S+\.\S+$/.test(trimmedEmail) ||
+      phone.trim().length < 7 ||
+      deliveryAddress.trim().length < 5 ||
+      cityStateZip.trim().length < 3 ||
+      cart.length === 0
+    ) {
+      showNotification('Please fill in every field above so we can arrange delivery.');
       return;
     }
+
+    submissionInFlight.current = true;
     setIsSubmitting(true);
+    setEmailError(null);
 
-    let methodLabel = 'WhatsApp Escrow & Payment Confirmation';
-    if (paymentMethod === 'chime') {
-      methodLabel = `Chime Pay (${chimeSign})`;
-    } else if (paymentMethod === 'applepay') {
-      methodLabel = giftCardApplied
-        ? `Apple Gift Card (${appleGiftCardCode.toUpperCase()}) + Apple Pay`
-        : 'Apple Pay VIP';
-    } else if (paymentMethod === 'wire') {
-      methodLabel = 'Direct Escrow Bank Wire Transfer';
-    }
-
-    const orderId = `YP-${Math.floor(100000 + Math.random() * 900000)}`;
+    const methodLabel = PAYMENT_LABELS[paymentMethod];
 
     const petsDetails = cart.map(item => {
-      const addOnsList = [];
-      if (item.selectedAddOns.insurance) addOnsList.push('1-Yr Health Guarantee ($25)');
-      if (item.selectedAddOns.starterKit) addOnsList.push('Royal Care Starter Kit ($85)');
-      if (item.selectedAddOns.vipTransport) addOnsList.push('VIP Flight Nanny Escort ($150)');
+      const addOnsList: string[] = [];
+      if (item.selectedAddOns.insurance) addOnsList.push('Vet health insurance ($25)');
+      if (item.selectedAddOns.starterKit) addOnsList.push('Starter kit ($85)');
+      if (item.selectedAddOns.vipTransport) addOnsList.push('Flight nanny escort ($150)');
 
       return {
         id: item.pet.id,
@@ -110,434 +109,307 @@ export const CheckoutView: React.FC = () => {
         gender: item.pet.gender,
         ageMonths: item.pet.ageMonths,
         priceUSD: item.pet.priceUSD,
-        addOnsSummary: addOnsList.length > 0 ? addOnsList.join(', ') : 'Standard Care Package'
+        addOnsSummary: addOnsList.length > 0 ? addOnsList.join(', ') : 'Standard care package'
       };
     });
 
-    const emailPayload = {
-      orderId,
-      petsDetails,
-      petName: cart[0]?.pet.name || 'Baby Pet',
-      breed: cart[0]?.pet.breed || 'Purebred',
-      customerName: trimmedName,
-      email: trimmedEmail,
-      phone: phone.trim(),
-      deliveryAddress: deliveryAddress.trim(),
-      cityStateZip: cityStateZip.trim(),
-      destinationType,
-      deliveryCost, // Location-based fee ($100 domestic vs $200 international)
-      subtotal,
-      addonsTotal,
-      taxes,
-      discount: giftCardApplied ? 100 : 0,
-      totalAmount, // Exact calculated total price
-      paymentMethod: methodLabel,
-      targetRecipient: 'craftking990@gmail.com'
-    };
-
+    // 1. Record the order first. Nothing is emailed until this has succeeded.
+    let order;
     try {
-      // Automatically send comprehensive order summary email to craftking990@gmail.com
-      const res = await fetch('/api/orders/email-notification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(emailPayload)
+      order = placeOrder({
+        customerName: trimmedName,
+        deliveryAddress: deliveryAddress.trim(),
+        cityStateZip: cityStateZip.trim(),
+        phone: phone.trim(),
+        deliveryCost,
+        paymentMethod: methodLabel
       });
-      const data = await res.json();
-      console.log('Order email dispatch result:', data);
-      setEmailSuccessMessage(`Order summary email automatically sent to craftking990@gmail.com with exact total ${formatPrice(totalAmount)}!`);
     } catch (err) {
-      console.error('Error sending order summary email:', err);
-    } finally {
+      console.error('Could not record the order:', err);
+      submissionInFlight.current = false;
       setIsSubmitting(false);
+      showNotification('We could not save your reservation. Please try again.');
+      return;
     }
 
-    placeOrder({
-      customerName: trimmedName,
-      deliveryAddress: deliveryAddress.trim(),
-      cityStateZip: cityStateZip.trim(),
-      phone: phone.trim(),
-      deliveryCost,
-      paymentMethod: methodLabel
-    });
+    // 2. Notify the store owner with the details of the order just placed.
+    setEmailState('sending');
+    const result = await sendOrderEmail(order, trimmedEmail);
+    setEmailState(result.status === 'failed' ? 'failed' : 'sent');
+    if (result.status === 'failed') setEmailError(result.message);
 
-    showNotification(`Order #${orderId} placed! Summary email sent to craftking990@gmail.com (${formatPrice(totalAmount)})`);
-    
-    setTimeout(() => {
-      setActiveTab('order-tracking');
-    }, 1200);
+    // 3. Buyer confirmation, when the mail server is configured. The
+    //    reservation stands regardless of whether this succeeds.
+    fetch('/api/orders/email-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderId: order.id,
+        petsDetails,
+        breed: cart[0]?.pet.breed,
+        customerName: trimmedName,
+        email: trimmedEmail,
+        phone: phone.trim(),
+        deliveryAddress: deliveryAddress.trim(),
+        cityStateZip: cityStateZip.trim(),
+        destinationType,
+        deliveryCost,
+        subtotal,
+        addonsTotal,
+        taxes,
+        discount: 0,
+        totalAmount,
+        paymentMethod: methodLabel
+      })
+    }).catch(err => console.error('Buyer confirmation email could not be sent:', err));
+
+    // 4. Hand over to WhatsApp, where the order is confirmed and paid.
+    const whatsappMessage = [
+      `Hello YourPets, I have just placed order #${order.id}.`,
+      `Pets: ${cart.map(item => `${item.pet.breed} (listing ${item.pet.id})`).join(', ')}`,
+      `Total: $${totalAmount}`,
+      `Delivery: ${destinationType === 'international' ? 'International' : 'USA'} — ${cityStateZip.trim()}`,
+      `Preferred payment: ${methodLabel}`,
+      `Please confirm availability and the next steps.`
+    ].join('\n');
+    window.open(whatsappLink(whatsappMessage), '_blank', 'noopener,noreferrer');
+
+    setIsSubmitting(false);
+    showNotification(`Reservation #${order.id} received — finish on WhatsApp to confirm.`);
+    setActiveTab('order-tracking');
+    // submissionInFlight is deliberately left set: this order is done, and the
+    // view has moved on to tracking.
   };
+
+  const fieldClass =
+    'w-full p-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface transition-colors focus:outline-none focus:border-[#002045] dark:focus:border-emerald-400';
 
   return (
     <div className="space-y-8 animate-fade-in pb-16">
-      {/* Header Banner */}
+      {/* Header */}
       <div className="p-8 rounded-3xl bg-[#002045] text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">100% Protected & Verified Checkout</span>
-          </div>
-          <h1 className="font-serif-display font-bold text-3xl md:text-4xl mt-1">Reserve Your Baby Pet</h1>
-          <p className="text-xs text-emerald-200 mt-1 flex items-center gap-1.5">
-            🔒 256-Bit Escrow Security • Zero Card Data Theft Risk • Finalize Deal & Confirm Payment on WhatsApp
+          <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Reservation</span>
+          <h1 className="font-serif-display font-bold text-3xl md:text-4xl mt-1">Almost there</h1>
+          <p className="text-xs text-white/80 mt-1">
+            Tell us where your companion is going. Payment is arranged with a real person, never taken on this page.
           </p>
         </div>
         <div className="text-right">
-          <span className="text-xs text-white/70 block uppercase font-bold">Total Amount Outlined</span>
-          <span className="text-2xl font-bold font-serif-display text-emerald-300">{formatPrice(totalAmount)}</span>
+          <span className="text-xs text-white/70 block uppercase font-bold">Total</span>
+          <span className="text-3xl font-bold font-serif-display text-emerald-300">{formatPrice(totalAmount)}</span>
         </div>
       </div>
 
+      {/* How this works — three steps, stated once, up front */}
+      <div className="p-6 md:p-8 rounded-3xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/50">
+        <h2 className="font-serif-display font-bold text-xl text-emerald-950 dark:text-emerald-100 flex items-center gap-2">
+          <MessageCircle className="w-5 h-5 text-emerald-600" /> How your reservation is completed
+        </h2>
+        <ol className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          {[
+            { n: '1', t: 'You reserve here', d: 'Fill in your details below and place the reservation. Nothing is charged.' },
+            { n: '2', t: 'We confirm on WhatsApp', d: `We reply on ${WHATSAPP_DISPLAY} to confirm your pet and agree how you pay.` },
+            { n: '3', t: 'We arrange shipment', d: 'Flight nanny and arrival date are scheduled with you on WhatsApp.' }
+          ].map(step => (
+            <li key={step.n} className="flex gap-3">
+              <span className="shrink-0 w-7 h-7 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center">
+                {step.n}
+              </span>
+              <div>
+                <h3 className="font-bold text-sm text-emerald-950 dark:text-emerald-100">{step.t}</h3>
+                <p className="text-emerald-900/80 dark:text-emerald-200/80 leading-relaxed mt-0.5">{step.d}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+
       <form onSubmit={handleCompleteOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Delivery & Payment Details */}
         <div className="lg:col-span-8 space-y-6">
-          
-          {/* Destination & Location-Based Shipping ($100 vs $200) */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
-            <h3 className="font-serif-display font-bold text-xl text-on-surface flex items-center gap-2">
-              <Plane className="w-5 h-5 text-emerald-600" /> Destination & Flight Transport Selection
-            </h3>
+          {/* Your details */}
+          <section className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
+            <h3 className="font-serif-display font-bold text-xl text-on-surface">Your details</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label
-                onClick={() => setDestinationType('domestic')}
-                className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-start gap-3 ${
-                  destinationType === 'domestic'
-                    ? 'border-[#002045] bg-emerald-50/50 dark:bg-emerald-950/30 text-on-surface ring-2 ring-emerald-500/50'
-                    : 'border-outline-variant/40 bg-surface-low dark:bg-surface-high'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="destination"
-                  checked={destinationType === 'domestic'}
-                  onChange={() => setDestinationType('domestic')}
-                  className="mt-1 text-emerald-600 focus:ring-emerald-500"
-                />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-on-surface">Domestic USA Delivery</span>
-                    <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">+$100</span>
-                  </div>
-                  <p className="text-xs text-on-surface-variant mt-0.5">
-                    Same country (USA) express climate transport with VIP Flight Nanny escort.
-                  </p>
-                </div>
-              </label>
-
-              <label
-                onClick={() => setDestinationType('international')}
-                className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-start gap-3 ${
-                  destinationType === 'international'
-                    ? 'border-[#002045] bg-emerald-50/50 dark:bg-emerald-950/30 text-on-surface ring-2 ring-emerald-500/50'
-                    : 'border-outline-variant/40 bg-surface-low dark:bg-surface-high'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="destination"
-                  checked={destinationType === 'international'}
-                  onChange={() => setDestinationType('international')}
-                  className="mt-1 text-emerald-600 focus:ring-emerald-500"
-                />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-on-surface">International / Overseas</span>
-                    <span className="bg-[#002045] text-white text-[10px] px-2 py-0.5 rounded-full font-bold">+$200</span>
-                  </div>
-                  <p className="text-xs text-on-surface-variant mt-0.5">
-                    Another country / international customs VIP Flight Nanny escort.
-                  </p>
-                </div>
-              </label>
-            </div>
-
-            {/* Delivery Address Form */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="block font-semibold text-on-surface mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface"
-                />
+                <label className="block font-semibold text-on-surface mb-1">Full name</label>
+                <input type="text" required value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={fieldClass} />
               </div>
 
               <div>
-                <label className="block font-semibold text-on-surface mb-1">Phone Number (WhatsApp Dispatch)</label>
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface"
-                />
+                <label className="block font-semibold text-on-surface mb-1">WhatsApp phone number</label>
+                <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className={fieldClass} />
               </div>
 
               <div>
-                <label className="block font-semibold text-on-surface mb-1">Email Address</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface"
-                />
+                <label className="block font-semibold text-on-surface mb-1">Email address</label>
+                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={fieldClass} />
               </div>
 
               <div>
-                <label className="block font-semibold text-on-surface mb-1">Street Delivery Address</label>
-                <input
-                  type="text"
-                  required
-                  value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface"
-                />
+                <label className="block font-semibold text-on-surface mb-1">Street address</label>
+                <input type="text" required value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} className={fieldClass} />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block font-semibold text-on-surface mb-1">City, State / Region & Postal Code</label>
-                <input
-                  type="text"
-                  required
-                  value={cityStateZip}
-                  onChange={(e) => setCityStateZip(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface"
-                />
+                <label className="block font-semibold text-on-surface mb-1">City, state / region and postal code</label>
+                <input type="text" required value={cityStateZip} onChange={(e) => setCityStateZip(e.target.value)} className={fieldClass} />
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Secure Payment Options */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <h3 className="font-serif-display font-bold text-xl text-on-surface flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" /> Safe Payment Options
-              </h3>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-3 py-1 rounded-full border border-emerald-300">
-                🔒 100% Escrow Protected
-              </span>
-            </div>
+          {/* Destination */}
+          <section className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
+            <h3 className="font-serif-display font-bold text-xl text-on-surface flex items-center gap-2">
+              <Plane className="w-5 h-5 text-emerald-600" /> Where are we flying to?
+            </h3>
 
-            <p className="text-xs text-on-surface-variant">
-              To keep your data completely safe and avoid online credit card theft risks, you can place your pet reservation here and finalize payment or send confirmation proof directly via WhatsApp.
-            </p>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('whatsapp')}
-                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
-                  paymentMethod === 'whatsapp' ? 'border-[#002045] bg-[#002045] text-white shadow-md' : 'border-outline-variant text-on-surface'
-                }`}
-              >
-                <MessageCircle className="w-4 h-4 text-emerald-400" />
-                <span>WhatsApp Escrow</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('chime')}
-                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
-                  paymentMethod === 'chime' ? 'border-[#002045] bg-[#002045] text-white shadow-md' : 'border-outline-variant text-on-surface'
-                }`}
-              >
-                <CreditCard className="w-4 h-4 text-emerald-400" />
-                <span>Chime Pay</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('applepay')}
-                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
-                  paymentMethod === 'applepay' ? 'border-[#002045] bg-[#002045] text-white shadow-md' : 'border-outline-variant text-on-surface'
-                }`}
-              >
-                <Gift className="w-4 h-4 text-emerald-400" />
-                <span>Apple Pay / Gift Card</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('wire')}
-                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
-                  paymentMethod === 'wire' ? 'border-[#002045] bg-[#002045] text-white shadow-md' : 'border-outline-variant text-on-surface'
-                }`}
-              >
-                <Lock className="w-4 h-4 text-emerald-400" />
-                <span>Bank Wire</span>
-              </button>
-            </div>
-
-            {/* WhatsApp Payment Option */}
-            {paymentMethod === 'whatsapp' && (
-              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-xs space-y-3 animate-fade-in">
-                <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200 font-bold text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600" /> Recommended: Confirm & Pay via WhatsApp
-                </div>
-                <p className="text-on-surface-variant leading-relaxed">
-                  After clicking <strong>Place Order & Confirm on WhatsApp</strong>, your reservation is instantly held. You will be redirected to connect directly with our Breeder Concierge on WhatsApp (<strong>+1 330 516-1283</strong>) to review video proof, select payment method (Zelle, Apple Pay, Chime, Wire), and receive instant flight booking.
-                </p>
-              </div>
-            )}
-
-            {/* Chime Payment Details */}
-            {paymentMethod === 'chime' && (
-              <div className="p-4 rounded-2xl bg-surface-low dark:bg-surface-high border border-outline-variant/40 text-xs space-y-3 animate-fade-in">
-                <div className="flex items-center gap-2 text-on-surface font-bold">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Chime Direct Transfer
-                </div>
-                <p className="text-on-surface-variant">
-                  Transfer directly via Chime to <strong>$YourPetsOfficial</strong> or enter your $ChimeSign below for automated invoice dispatch.
-                </p>
-                <div>
-                  <label className="block font-bold text-on-surface mb-1">Your $ChimeSign or Chime Phone</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { id: 'domestic' as const, title: 'Inside the USA', price: '+$100', desc: 'Express climate transport with a flight nanny.' },
+                { id: 'international' as const, title: 'Another country', price: '+$200', desc: 'Overseas customs handling and flight nanny escort.' }
+              ].map(option => (
+                <label
+                  key={option.id}
+                  className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-start gap-3 ${
+                    destinationType === option.id
+                      ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30 ring-2 ring-emerald-500/40'
+                      : 'border-outline-variant/40 bg-surface-low dark:bg-surface-high hover:border-emerald-400/60'
+                  }`}
+                >
                   <input
-                    type="text"
-                    required
-                    value={chimeSign}
-                    onChange={(e) => setChimeSign(e.target.value)}
-                    placeholder=""
-                    className="w-full p-3 rounded-xl border border-outline-variant bg-white dark:bg-surface-high text-on-surface"
+                    type="radio"
+                    name="destination"
+                    checked={destinationType === option.id}
+                    onChange={() => setDestinationType(option.id)}
+                    className="mt-1 accent-emerald-600"
                   />
-                </div>
-              </div>
-            )}
-
-            {/* Apple Pay & Apple Gift Cards */}
-            {paymentMethod === 'applepay' && (
-              <div className="p-4 rounded-2xl bg-surface-low dark:bg-surface-high border border-outline-variant/40 text-xs space-y-4 animate-fade-in">
-                <div className="flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-on-surface text-sm">Apple Pay & Apple Gift Cards</span>
-                    <p className="text-on-surface-variant">Use Apple Pay 1-Click checkout or redeem Apple Gift Card codes instantly.</p>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-on-surface">{option.title}</span>
+                      <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{option.price}</span>
+                    </div>
+                    <p className="text-xs text-on-surface-variant mt-0.5">{option.desc}</p>
                   </div>
-                  <Gift className="w-6 h-6 text-emerald-600" />
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-2">
-                  <label className="block font-bold text-on-surface">Redeem Apple Gift Card Code</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={appleGiftCardCode}
-                      onChange={(e) => setAppleGiftCardCode(e.target.value)}
-                      placeholder=""
-                      className="flex-1 p-2.5 rounded-lg border border-outline-variant bg-surface-low dark:bg-surface-high text-on-surface uppercase font-mono"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleApplyGiftCard}
-                      className="bg-[#002045] text-white px-4 py-2.5 rounded-lg font-bold hover:bg-[#1a365d]"
-                    >
-                      Apply Code
-                    </button>
-                  </div>
-                  {giftCardApplied && (
-                    <span className="text-emerald-600 font-bold flex items-center gap-1 text-[11px]">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> $100 Apple Gift Card Applied Successfully!
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Bank Wire Details */}
-            {paymentMethod === 'wire' && (
-              <div className="p-4 rounded-2xl bg-surface-low dark:bg-surface-high border border-outline-variant/40 text-xs space-y-2 animate-fade-in">
-                <p className="font-bold text-on-surface">Official Escrow Bank Wire Transfer Instructions</p>
-                <p className="text-on-surface-variant">
-                  Bank wire instructions will be sent to your phone along with instant WhatsApp dispatch (+1 330 516-1283).
-                </p>
-              </div>
-            )}
-
-            {/* WhatsApp Direct Help Link */}
-            <div className="pt-2 border-t border-outline-variant/30">
-              <a
-                href="https://wa.me/13305161283"
-                target="_blank"
-                rel="noreferrer"
-                className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border border-emerald-300 text-xs font-bold flex items-center justify-between hover:bg-emerald-100 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5 text-emerald-600" />
-                  <span>Have questions before ordering? Chat live on WhatsApp: <strong>+1 (330) 516-1283</strong></span>
-                </div>
-                <span className="underline">Chat Now →</span>
-              </a>
+                </label>
+              ))}
             </div>
+          </section>
 
-          </div>
-        </div>
-
-        {/* Right Column: Order Confirmation */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
-            <h3 className="font-serif-display font-bold text-xl text-on-surface">Order Summary</h3>
-
-            <div className="space-y-2.5 text-xs text-on-surface-variant pb-3 border-b border-outline-variant/30">
-              <div className="flex justify-between">
-                <span>Pets Subtotal</span>
-                <span className="font-bold text-on-surface">{formatPrice(subtotal)}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Care Kits & Insurance</span>
-                <span className="font-bold text-on-surface">{formatPrice(addonsTotal)}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Flight Transport ({destinationType === 'domestic' ? 'USA $100' : 'Overseas $200'})</span>
-                <span className="font-bold text-emerald-600">{formatPrice(deliveryCost)}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Veterinary Taxes & Fees</span>
-                <span className="font-bold text-on-surface">{formatPrice(taxes)}</span>
-              </div>
-
-              {giftCardApplied && (
-                <div className="flex justify-between text-emerald-600 font-bold">
-                  <span>Apple Gift Card Credit</span>
-                  <span>-$100</span>
-                </div>
-              )}
-
-              <div className="flex justify-between text-sm font-bold text-on-surface pt-2 border-t border-outline-variant/20">
-                <span>Exact Outlined Total</span>
-                <span className="font-serif-display text-2xl text-[#002045] dark:text-emerald-400">
-                  {formatPrice(totalAmount)}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 text-[11px] space-y-1">
-              <span className="font-bold text-emerald-800 dark:text-emerald-300 block flex items-center gap-1">
-                <Mail className="w-3.5 h-3.5 text-emerald-600" /> Automatic Email Order Summary
-              </span>
-              <p className="text-on-surface-variant">
-                Full order details and exact calculated total price ({formatPrice(totalAmount)}) will be automatically emailed to <strong>craftking990@gmail.com</strong> upon clicking order button.
+          {/* Payment preference */}
+          <section className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
+            <div>
+              <h3 className="font-serif-display font-bold text-xl text-on-surface">How would you like to pay?</h3>
+              <p className="text-xs text-on-surface-variant mt-1">
+                Pick a preference — nothing is charged now. We confirm the exact steps with you on WhatsApp, so your card
+                details are never typed into this website.
               </p>
             </div>
 
-            {emailSuccessMessage && (
-              <div className="p-3 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 text-xs font-bold flex items-center gap-2 border border-emerald-400">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{emailSuccessMessage}</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {PAYMENT_OPTIONS.map(option => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setPaymentMethod(option.id)}
+                  className={`p-3.5 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1.5 ${
+                    paymentMethod === option.id
+                      ? 'border-[#002045] bg-[#002045] text-white shadow-md scale-[1.02]'
+                      : 'border-outline-variant text-on-surface hover:border-[#002045] hover:-translate-y-0.5'
+                  }`}
+                >
+                  <span className={paymentMethod === option.id ? 'text-emerald-300' : 'text-emerald-600'}>{option.icon}</span>
+                  <span>{option.label}</span>
+                  <span className={`text-[10px] font-medium leading-tight ${paymentMethod === option.id ? 'text-white/70' : 'text-on-surface-variant'}`}>
+                    {option.hint}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Summary */}
+        <div className="lg:col-span-4">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm lg:sticky lg:top-28">
+            <h3 className="font-serif-display font-bold text-xl text-on-surface">Order summary</h3>
+
+            <div className="space-y-2.5 text-xs text-on-surface-variant pb-3 border-b border-outline-variant/30">
+              <div className="flex justify-between">
+                <span>Pets subtotal</span>
+                <span className="font-bold text-on-surface">{formatPrice(subtotal)}</span>
               </div>
-            )}
+              <div className="flex justify-between">
+                <span>Care kits &amp; insurance</span>
+                <span className="font-bold text-on-surface">{formatPrice(addonsTotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Flight transport</span>
+                <span className="font-bold text-emerald-600">{formatPrice(deliveryCost)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Taxes &amp; fees</span>
+                <span className="font-bold text-on-surface">{formatPrice(taxes)}</span>
+              </div>
+
+              <div className="flex justify-between items-baseline text-sm font-bold text-on-surface pt-2 border-t border-outline-variant/20">
+                <span>Total</span>
+                <span className="font-serif-display text-2xl text-[#002045] dark:text-emerald-400">{formatPrice(totalAmount)}</span>
+              </div>
+            </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-700 transition-colors shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-lg hover:shadow-emerald-600/30 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               id="complete-order-btn"
             >
-              <MessageCircle className="w-4 h-4" /> {isSubmitting ? 'Sending Order Email...' : 'Place Order & Finalize on WhatsApp'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {emailState === 'sending' ? 'Sending your order...' : 'Reserving...'}
+                </>
+              ) : (
+                <>
+                  <MessageCircle className="w-4 h-4" />
+                  Reserve &amp; continue on WhatsApp
+                </>
+              )}
             </button>
+
+            {emailState === 'sent' && (
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 text-emerald-800 dark:text-emerald-200 text-[11px] font-semibold flex items-start gap-2 animate-fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-px" />
+                <span>Your order reached our team. We will confirm it with you on WhatsApp.</span>
+              </div>
+            )}
+
+            {emailState === 'failed' && (
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 text-amber-900 dark:text-amber-200 text-[11px] font-semibold flex items-start gap-2 animate-fade-in">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-px" />
+                <span>
+                  Your reservation is saved, but the notification email did not go through
+                  {emailError ? ` (${emailError})` : ''}. Please send us the order number on WhatsApp so we do not
+                  miss it.
+                </span>
+              </div>
+            )}
+
+            <p className="text-[11px] text-on-surface-variant leading-relaxed flex items-start gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-px" />
+              This opens WhatsApp with your order details ready to send. Your reservation is only final once we confirm it
+              there — and shipment is scheduled the same way.
+            </p>
+
+            <a
+              href={whatsappLink('Hello YourPets, I have a question before I reserve.')}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 hover:underline pt-1"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" /> Questions first? Chat to us on {WHATSAPP_DISPLAY}
+            </a>
           </div>
         </div>
       </form>

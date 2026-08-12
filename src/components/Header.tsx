@@ -1,38 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Search, Heart, ShoppingBag, Menu, X, Sun, Moon, Sparkles, Camera,
-  User, ShieldCheck, HelpCircle, PhoneCall, BookOpen, Layers, PawPrint
+  User, ShieldCheck, PhoneCall
 } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
-import { Currency, Language } from '../types';
+import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
+import { YourPetsLogo } from './YourPetsLogo';
+import { Currency } from '../types';
 
 
-const YourPetsLogo: React.FC = () => (
-  <span
-    className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[1.35rem] border border-amber-300/70 bg-[#002045] shadow-lg shadow-[#002045]/15 transition-transform duration-500 ease-out group-hover:scale-105 group-hover:rotate-[-3deg] dark:border-amber-200/40"
-    aria-hidden="true"
-  >
-    <span className="absolute inset-0 bg-[radial-gradient(circle_at_28%_18%,rgba(255,255,255,0.95),transparent_24%),linear-gradient(135deg,rgba(250,204,21,0.96),rgba(16,185,129,0.72)_42%,rgba(0,32,69,0.15)_72%)]" />
-    <span className="absolute -bottom-5 -right-4 h-14 w-14 rounded-full bg-emerald-300/30 blur-sm" />
-    <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white/80 blur-[1px]" />
-    <PawPrint className="relative z-10 h-6 w-6 -rotate-12 text-white drop-shadow-md" strokeWidth={2.8} />
-    <span className="absolute bottom-2 right-2 z-10 h-2.5 w-2.5 rounded-full border border-white/80 bg-amber-300" />
-  </span>
-);
+const NAV_LINKS: Array<{ tab: string; label: string }> = [
+  { tab: 'home', label: 'Home' },
+  { tab: 'browse', label: 'Browse' },
+  { tab: 'health-guarantee', label: 'Health Guarantee' },
+  { tab: 'breeders', label: 'Breeders' },
+  { tab: 'pet-care', label: 'Care Guide' },
+  { tab: 'faqs', label: 'FAQs' },
+  { tab: 'contact', label: 'Contact' }
+];
+
 
 export const Header: React.FC = () => {
   const {
     currency, setCurrency,
-    language, setLanguage,
     darkMode, setDarkMode,
     wishlist, cart,
     activeTab, setActiveTab,
     searchQuery, setSearchQuery,
     setIsQuizOpen,
     setIsBreedIdentifierOpen,
-    setIsChatOpen,
-    setIsCompareOpen,
-    compareList,
     currentUser,
     setIsAuthModalOpen
   } = usePetStore();
@@ -75,6 +71,7 @@ export const Header: React.FC = () => {
 
   const cartItemsCount = cart.length;
   const wishlistCount = wishlist.length;
+  const isAdmin = currentUser?.isLoggedIn && currentUser.role === 'admin';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#f9f9f9]/90 dark:bg-[#1a1c1e]/90 backdrop-blur-xl border-b border-outline-variant/30 dark:border-outline-variant/10 transition-colors">
@@ -85,21 +82,12 @@ export const Header: React.FC = () => {
             <ShieldCheck className="w-3.5 h-3.5" /> 100% Health Guaranteed & USDA Licensed
           </span>
           <a
-            href="https://wa.me/13305161283"
+            href={whatsappLink()}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-emerald-300 hover:text-white transition-colors"
           >
-            <PhoneCall className="w-3 h-3" /> WhatsApp: +1 (330) 516-1283
-          </a>
-          <a
-            href="https://www.tiktok.com/@yourpets6?_r=1&_t=ZT-98e7qti1ijV"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 bg-white/10 hover:bg-white/20 text-cyan-300 hover:text-white px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-colors"
-            id="header-top-tiktok-btn"
-          >
-            <span>TikTok @yourpets6</span>
+            <PhoneCall className="w-3 h-3" /> WhatsApp: {WHATSAPP_DISPLAY}
           </a>
         </div>
 
@@ -115,18 +103,6 @@ export const Header: React.FC = () => {
             <option value="GBP" className="bg-[#002045] text-white">GBP (£)</option>
             <option value="CAD" className="bg-[#002045] text-white">CAD ($)</option>
             <option value="AUD" className="bg-[#002045] text-white">AUD ($)</option>
-          </select>
-
-          {/* Language Switcher */}
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as Language)}
-            className="bg-transparent text-white border-none text-xs focus:ring-0 cursor-pointer font-semibold py-0 pl-1 pr-4"
-          >
-            <option value="en" className="bg-[#002045] text-white">EN (English)</option>
-            <option value="fr" className="bg-[#002045] text-white">FR (Français)</option>
-            <option value="es" className="bg-[#002045] text-white">ES (Español)</option>
-            <option value="de" className="bg-[#002045] text-white">DE (Deutsch)</option>
           </select>
 
           {/* Dark / Light Toggle */}
@@ -172,68 +148,19 @@ export const Header: React.FC = () => {
 
         {/* Center: Primary Links (Desktop) */}
         <nav className="hidden lg:flex items-center gap-3 xl:gap-6 2xl:gap-8 text-xs xl:text-sm font-medium shrink min-w-0">
-          <button
-            onClick={() => setActiveTab('home')}
-            className={`transition-colors whitespace-nowrap shrink-0 ${activeTab === 'home' ? 'text-[#002045] dark:text-white font-bold border-b-2 border-[#002045] dark:border-white pb-1' : 'text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
-          >
-            Home
-          </button>
-
-          <button
-            onClick={() => setActiveTab('browse')}
-            className={`transition-colors whitespace-nowrap shrink-0 ${activeTab === 'browse' ? 'text-[#002045] dark:text-white font-bold border-b-2 border-[#002045] dark:border-white pb-1' : 'text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
-          >
-            Browse
-          </button>
-
-          <button
-            onClick={() => setActiveTab('health-guarantee')}
-            className={`transition-colors whitespace-nowrap shrink-0 ${activeTab === 'health-guarantee' ? 'text-[#002045] dark:text-white font-bold border-b-2 border-[#002045] dark:border-white pb-1' : 'text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
-          >
-            Health Guarantee
-          </button>
-
-          <button
-            onClick={() => setActiveTab('breeders')}
-            className={`transition-colors whitespace-nowrap shrink-0 ${activeTab === 'breeders' ? 'text-[#002045] dark:text-white font-bold border-b-2 border-[#002045] dark:border-white pb-1' : 'text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
-          >
-            Breeders
-          </button>
-
-          <button
-            onClick={() => setActiveTab('pet-care')}
-            className={`transition-colors whitespace-nowrap shrink-0 ${activeTab === 'pet-care' ? 'text-[#002045] dark:text-white font-bold border-b-2 border-[#002045] dark:border-white pb-1' : 'text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
-          >
-            Care Guide
-          </button>
-
-          <button
-            onClick={() => setActiveTab('faqs')}
-            className={`transition-colors whitespace-nowrap shrink-0 ${activeTab === 'faqs' ? 'text-[#002045] dark:text-white font-bold border-b-2 border-[#002045] dark:border-white pb-1' : 'text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
-          >
-            FAQs
-          </button>
-
-          <button
-            onClick={() => setActiveTab('contact')}
-            className={`transition-colors whitespace-nowrap shrink-0 ${activeTab === 'contact' ? 'text-[#002045] dark:text-white font-bold border-b-2 border-[#002045] dark:border-white pb-1' : 'text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
-          >
-            Contact
-          </button>
+          {NAV_LINKS.map(link => (
+            <button
+              key={link.tab}
+              onClick={() => setActiveTab(link.tab)}
+              className={`transition-colors whitespace-nowrap shrink-0 ${activeTab === link.tab ? 'text-[#002045] dark:text-white font-bold border-b-2 border-[#002045] dark:border-white pb-1' : 'text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
+            >
+              {link.label}
+            </button>
+          ))}
         </nav>
 
         {/* Right: Search, Wishlist, Cart & Profile Actions */}
         <div className="flex items-center gap-2 xl:gap-3 shrink-0 ml-auto">
-          {/* AI Breed Quiz Trigger */}
-          <button
-            onClick={() => setIsQuizOpen(true)}
-            className="hidden 2xl:flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 transition-colors shadow-sm shrink-0"
-            id="ai-quiz-nav-btn"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            AI Match
-          </button>
-
           {/* Expandable Circular Search Bar */}
           <div className="relative">
             {!isSearchExpanded && searchQuery.trim().length === 0 ? (
@@ -381,13 +308,15 @@ export const Header: React.FC = () => {
             </span>
           </button>
 
-          {/* Admin Toggle Shortcut */}
-          <button
-            onClick={() => setActiveTab('admin')}
-            className="hidden 2xl:inline-block text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2.5 py-1 rounded-full border border-amber-300 dark:border-amber-700 shrink-0"
-          >
-            Admin
-          </button>
+          {/* Admin Shortcut (admins only) */}
+          {isAdmin && (
+            <button
+              onClick={() => setActiveTab('admin')}
+              className="hidden xl:inline-block text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2.5 py-1 rounded-full border border-amber-300 dark:border-amber-700 shrink-0"
+            >
+              Admin
+            </button>
+          )}
         </div>
       </div>
 
@@ -410,48 +339,15 @@ export const Header: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-2 pb-4 border-b border-outline-variant/30">
-            <button
-              onClick={() => { setActiveTab('home'); setIsMobileMenuOpen(false); }}
-              className="text-left py-2 px-3 rounded-lg hover:bg-surface-low dark:hover:bg-surface-high"
-            >
-              Home
-            </button>
-            <button
-              onClick={() => { setActiveTab('browse'); setIsMobileMenuOpen(false); }}
-              className="text-left py-2 px-3 rounded-lg hover:bg-surface-low dark:hover:bg-surface-high"
-            >
-              Browse Pets
-            </button>
-            <button
-              onClick={() => { setActiveTab('health-guarantee'); setIsMobileMenuOpen(false); }}
-              className="text-left py-2 px-3 rounded-lg hover:bg-surface-low dark:hover:bg-surface-high"
-            >
-              Health Guarantee
-            </button>
-            <button
-              onClick={() => { setActiveTab('breeders'); setIsMobileMenuOpen(false); }}
-              className="text-left py-2 px-3 rounded-lg hover:bg-surface-low dark:hover:bg-surface-high"
-            >
-              Verified Breeders
-            </button>
-            <button
-              onClick={() => { setActiveTab('pet-care'); setIsMobileMenuOpen(false); }}
-              className="text-left py-2 px-3 rounded-lg hover:bg-surface-low dark:hover:bg-surface-high"
-            >
-              Pet Care Guide
-            </button>
-            <button
-              onClick={() => { setActiveTab('faqs'); setIsMobileMenuOpen(false); }}
-              className="text-left py-2 px-3 rounded-lg hover:bg-surface-low dark:hover:bg-surface-high"
-            >
-              FAQs
-            </button>
-            <button
-              onClick={() => { setActiveTab('contact'); setIsMobileMenuOpen(false); }}
-              className="text-left py-2 px-3 rounded-lg hover:bg-surface-low dark:hover:bg-surface-high"
-            >
-              Contact Us
-            </button>
+            {NAV_LINKS.map(link => (
+              <button
+                key={link.tab}
+                onClick={() => { setActiveTab(link.tab); setIsMobileMenuOpen(false); }}
+                className="text-left py-2 px-3 rounded-lg hover:bg-surface-low dark:hover:bg-surface-high"
+              >
+                {link.label}
+              </button>
+            ))}
             <button
               onClick={() => { setActiveTab('dashboard'); setIsMobileMenuOpen(false); }}
               className="text-left py-2 px-3 rounded-lg hover:bg-surface-low dark:hover:bg-surface-high"
@@ -460,7 +356,7 @@ export const Header: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+          <div className="flex flex-wrap items-center gap-2 pt-2">
             <button
               onClick={() => { setIsBreedIdentifierOpen(true); setIsMobileMenuOpen(false); }}
               className="flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-600 px-4 py-2 rounded-full"
@@ -475,12 +371,14 @@ export const Header: React.FC = () => {
               <Sparkles className="w-4 h-4" /> AI Match
             </button>
 
-            <button
-              onClick={() => { setActiveTab('admin'); setIsMobileMenuOpen(false); }}
-              className="text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-4 py-2 rounded-full"
-            >
-              Admin
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => { setActiveTab('admin'); setIsMobileMenuOpen(false); }}
+                className="text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-4 py-2 rounded-full"
+              >
+                Admin
+              </button>
+            )}
           </div>
         </div>
       )}

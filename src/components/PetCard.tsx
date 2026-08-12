@@ -1,6 +1,8 @@
 import React from 'react';
-import { Heart, ShieldCheck, Eye, Layers, Sparkles, CheckCircle } from 'lucide-react';
+import { Heart, Eye, Sparkles, CheckCircle } from 'lucide-react';
 import { Pet } from '../types';
+import { mainPhotoOf } from '../lib/petImages';
+import { PetPhoto } from './PetPhoto';
 import { usePetStore } from '../context/PetStoreContext';
 
 interface PetCardProps {
@@ -13,30 +15,34 @@ export const PetCard: React.FC<PetCardProps> = ({ pet }) => {
     formatPrice, formatAge,
     setSelectedPetId, setActiveTab,
     setQuickViewPet,
-    toggleCompare, compareList,
-    openReserveModal,
-    recordPetView
+    addToCart,
+    currentUser
   } = usePetStore();
 
   const isWishlisted = wishlist.includes(pet.id);
-  const isComparing = compareList.some(p => p.id === pet.id);
   const isRare = pet.breedType === 'rare';
 
   const handleClickCard = () => {
-    recordPetView(pet);
     setSelectedPetId(pet.id);
     setActiveTab('pet-detail');
+  };
+
+  // "Reserve" means the same thing everywhere: into the basket and straight to
+  // the reservation form.
+  const handleReserve = () => {
+    addToCart(pet);
+    if (currentUser?.isLoggedIn) setActiveTab('checkout');
   };
 
   return (
     <article className="bg-white dark:bg-[#1f2226] rounded-2xl border border-outline-variant/30 overflow-hidden card-elevation flex flex-col relative group">
       {/* Image Container */}
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-low dark:bg-surface-high cursor-pointer" onClick={handleClickCard}>
-        <img
-          src={pet.images[0]}
-          alt={`${pet.name} - ${pet.breed}`}
+        <PetPhoto
+          src={mainPhotoOf(pet)}
+          alt={pet.breed}
+          caption={pet.breed}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-          loading="lazy"
         />
 
         {/* Top Badges Overlay */}
@@ -108,7 +114,7 @@ export const PetCard: React.FC<PetCardProps> = ({ pet }) => {
           </div>
 
           <p className="text-xs text-on-surface-variant font-medium flex items-center gap-2 mb-2">
-            <span>{pet.name}</span> • <span>{formatAge(pet.ageMonths)}</span> • <span>{pet.gender}</span>
+            <span>{formatAge(pet.ageMonths)}</span> • <span>{pet.gender}</span> • <span>{pet.color}</span>
           </p>
 
           {/* Personality Traits Badges */}
@@ -127,34 +133,20 @@ export const PetCard: React.FC<PetCardProps> = ({ pet }) => {
         {/* Card Action Buttons */}
         <div className="pt-2 border-t border-outline-variant/20 flex items-center gap-2">
           <button
-            onClick={() => toggleCompare(pet)}
-            className={`p-2 rounded-lg border text-xs font-semibold transition-colors ${
-              isComparing
-                ? 'bg-secondary-container/40 border-emerald-500 text-emerald-900 dark:text-emerald-200'
-                : 'border-outline-variant text-on-surface-variant hover:border-[#002045]'
-            }`}
-            title="Compare with other pets"
+            onClick={handleClickCard}
+            className="flex-1 py-2.5 rounded-lg border border-outline-variant text-on-surface font-semibold text-xs tracking-wider uppercase hover:border-[#002045] hover:text-[#002045] dark:hover:border-white dark:hover:text-white transition-colors text-center"
+            id={`view-details-${pet.id}`}
           >
-            <Layers className="w-4 h-4" />
+            Details
           </button>
 
-          {isRare ? (
-            <button
-              onClick={() => openReserveModal(pet)}
-              className="flex-1 py-2.5 rounded-lg bg-[#002045] text-white font-semibold text-xs tracking-wider uppercase hover:bg-[#1a365d] transition-colors shadow-sm text-center"
-              id={`reserve-vip-${pet.id}`}
-            >
-              Reserve VIP
-            </button>
-          ) : (
-            <button
-              onClick={handleClickCard}
-              className="flex-1 py-2.5 rounded-lg border border-[#002045] dark:border-white text-[#002045] dark:text-white font-semibold text-xs tracking-wider uppercase hover:bg-[#002045] hover:text-white dark:hover:bg-white dark:hover:text-[#002045] transition-colors text-center"
-              id={`view-details-${pet.id}`}
-            >
-              View Details
-            </button>
-          )}
+          <button
+            onClick={handleReserve}
+            className="flex-1 py-2.5 rounded-lg bg-[#002045] text-white font-semibold text-xs tracking-wider uppercase hover:bg-[#1a365d] transition-all shadow-sm hover:shadow-md text-center"
+            id={`reserve-${pet.id}`}
+          >
+            Reserve
+          </button>
         </div>
       </div>
     </article>

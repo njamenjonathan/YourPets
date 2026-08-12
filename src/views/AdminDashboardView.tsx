@@ -1,27 +1,28 @@
 import React, { useState } from 'react';
-import {
-  Plus, Trash2, Edit, CheckCircle2, ShieldCheck, Sparkles, DollarSign, Package, Users
-} from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { mainPhotoOf } from '../lib/petImages';
+import { PetPhoto } from '../components/PetPhoto';
 import { Pet, Species, BreedType, Gender } from '../types';
 
 export const AdminDashboardView: React.FC = () => {
-  const { pets, orders, addPet, updatePet, deletePet, formatPrice, currentUser, setIsAuthModalOpen } = usePetStore();
+  const { pets, orders, addPet, deletePet, formatPrice, currentUser, setIsAuthModalOpen } = usePetStore();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingPet, setEditingPet] = useState<Pet | null>(null);
 
   // Form state for adding new pet
   const [name, setName] = useState('');
   const [species, setSpecies] = useState<Species>('dog');
   const [breed, setBreed] = useState('');
   const [breedType, setBreedType] = useState<BreedType>('rare');
-  const [ageMonths, setAgeMonths] = useState(3);
-  const [gender, setGender] = useState<Gender>('Female');
-  const [color, setColor] = useState('Platinum Silver');
   const [priceUSD, setPriceUSD] = useState(220);
   const [imageUrl, setImageUrl] = useState('https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=1000');
-  const [traitsString, setTraitsString] = useState('Friendly, Intelligent, Playful');
+
+  // Defaults applied to every new listing created from this form
+  const DEFAULT_AGE_MONTHS = 2;
+  const DEFAULT_GENDER: Gender = 'Female';
+  const DEFAULT_COLOR = 'Platinum Silver';
+  const DEFAULT_TRAITS = ['Friendly', 'Intelligent', 'Playful'];
 
   const handleCreatePet = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,9 +34,9 @@ export const AdminDashboardView: React.FC = () => {
       breedType,
       generation: breedType === 'rare' ? 'VIP Exotic Lineage' : 'Purebred AKC',
       badgeText: breedType === 'rare' ? 'Rare Breed' : 'New Arrival',
-      ageMonths: Number(ageMonths),
-      gender,
-      color,
+      ageMonths: DEFAULT_AGE_MONTHS,
+      gender: DEFAULT_GENDER,
+      color: DEFAULT_COLOR,
       weightKg: 3.5,
       heightCm: 22,
       birthDate: '2026-05-10',
@@ -71,7 +72,7 @@ export const AdminDashboardView: React.FC = () => {
         nextVaccinationDue: '2026-09-15',
         healthGuaranteeDays: 90
       },
-      personalityTraits: traitsString.split(',').map(s => s.trim()),
+      personalityTraits: DEFAULT_TRAITS,
       breedDetails: {
         history: 'Ethically bred under master veterinarian care.',
         lifespan: '12 - 15 years',
@@ -153,7 +154,13 @@ export const AdminDashboardView: React.FC = () => {
 
         <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-1 shadow-sm">
           <span className="text-xs font-bold uppercase text-on-surface-variant">Avg. Listing Value</span>
-          <div className="text-3xl font-serif-display font-bold text-[#002045] dark:text-white">$235</div>
+          <div className="text-3xl font-serif-display font-bold text-[#002045] dark:text-white">
+            {formatPrice(
+              pets.length > 0
+                ? Math.round(pets.reduce((acc, p) => acc + p.priceUSD, 0) / pets.length)
+                : 0
+            )}
+          </div>
         </div>
       </div>
 
@@ -203,7 +210,7 @@ export const AdminDashboardView: React.FC = () => {
             {pets.map(p => (
               <tr key={p.id} className="hover:bg-surface-low dark:hover:bg-surface-high">
                 <td className="p-3 flex items-center gap-3">
-                  <img src={p.images[0]} alt={p.name} className="w-10 h-10 rounded-xl object-cover" />
+                  <PetPhoto src={mainPhotoOf(p)} alt={p.name} className="w-10 h-10 rounded-xl object-cover shrink-0" />
                   <div>
                     <h4 className="font-bold text-on-surface">{p.breed}</h4>
                     <p className="text-on-surface-variant">{p.name}</p>

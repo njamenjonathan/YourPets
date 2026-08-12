@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { Filter, SlidersHorizontal, RotateCcw, Search, Sparkles, Check, Camera } from 'lucide-react';
-import { usePetStore } from '../context/PetStoreContext';
+import { SlidersHorizontal, RotateCcw, Search, Sparkles, Camera } from 'lucide-react';
+import { usePetStore, INITIAL_FILTER_STATE } from '../context/PetStoreContext';
 import { PetCard } from '../components/PetCard';
 import { Species, BreedType, Gender } from '../types';
 
@@ -15,16 +15,14 @@ export const BrowseView: React.FC = () => {
     setIsBreedIdentifierOpen
   } = usePetStore();
 
-  // Extract unique breeds
-  const availableBreeds = useMemo(() => {
-    return Array.from(new Set(pets.map(p => p.breed))).sort();
-  }, [pets]);
-
-  // Extract personality traits
+  // The most common personality traits, so the filter list stays short and useful
   const availableTraits = useMemo(() => {
-    const set = new Set<string>();
-    pets.forEach(p => p.personalityTraits.forEach(t => set.add(t)));
-    return Array.from(set);
+    const counts = new Map<string, number>();
+    pets.forEach(p => p.personalityTraits.forEach(t => counts.set(t, (counts.get(t) || 0) + 1)));
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 12)
+      .map(([trait]) => trait);
   }, [pets]);
 
   // Filter & Sort Logic
@@ -85,21 +83,7 @@ export const BrowseView: React.FC = () => {
   }, [pets, filterState, searchQuery]);
 
   const resetFilters = () => {
-    setFilterState({
-      species: [],
-      breedTypes: [],
-      selectedBreeds: [],
-      genders: [],
-      minPriceUSD: 150,
-      maxPriceUSD: 300,
-      minAgeMonths: 1,
-      maxAgeMonths: 6,
-      traits: [],
-      vaccinatedOnly: false,
-      microchippedOnly: false,
-      searchQuery: '',
-      sortBy: 'recommended'
-    });
+    setFilterState(INITIAL_FILTER_STATE);
     setSearchQuery('');
   };
 
@@ -327,20 +311,9 @@ export const BrowseView: React.FC = () => {
         <main className="flex-1 space-y-6">
           {/* Top Sort Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 rounded-2xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 shadow-sm">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-xs font-bold text-on-surface">
-                Showing <strong>{filteredPets.length}</strong> available companion pets
-              </span>
-
-              <button
-                onClick={() => setIsBreedIdentifierOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950 dark:hover:bg-emerald-900 text-emerald-900 dark:text-emerald-200 border border-emerald-300/50 rounded-full text-xs font-bold transition-all shadow-xs"
-                title="Upload pet photo to identify breed & market value"
-              >
-                <Camera className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Photo Breed Scan</span>
-              </button>
-            </div>
+            <span className="text-xs font-bold text-on-surface">
+              Showing <strong>{filteredPets.length}</strong> available companion pets
+            </span>
 
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-on-surface-variant">Sort by:</span>
@@ -374,7 +347,7 @@ export const BrowseView: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPets.map(pet => (
                 <PetCard key={pet.id} pet={pet} />
               ))}

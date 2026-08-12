@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Heart, Mail, CheckCircle2, Phone, MapPin, Send } from 'lucide-react';
+import { ShieldCheck, Mail, CheckCircle2, Phone, MapPin, Send } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
+import { YourPetsLogo } from './YourPetsLogo';
 
 // TikTok Icon SVG
 const TikTokIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
@@ -15,15 +17,24 @@ const TikTokIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" })
 );
 
 export const Footer: React.FC = () => {
-  const { setActiveTab, showNotification } = usePetStore();
+  const { setActiveTab, setFilterState, showNotification } = usePetStore();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+
+  const browseWith = (species?: 'dog' | 'cat', breedType?: 'rare' | 'standard') => {
+    setFilterState(prev => ({
+      ...prev,
+      species: species ? [species] : [],
+      breedTypes: breedType ? [breedType] : []
+    }));
+    setActiveTab('browse');
+  };
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setSubscribed(true);
-    showNotification('Thank you for subscribing! Check your inbox for $150 off voucher.');
+    showNotification('Thanks for subscribing — we will email you when new pets arrive.');
     setEmail('');
   };
 
@@ -35,11 +46,7 @@ export const Footer: React.FC = () => {
           {/* Col 1 & 2: Brand & Newsletter */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-2.5">
-              <img
-                src="/src/assets/images/yourpets_logo_1785983348124.jpg"
-                alt="YourPets Logo"
-                className="w-10 h-10 rounded-full object-cover border-2 border-[#002045]/20 dark:border-white/20 shadow-sm"
-              />
+              <YourPetsLogo className="h-10 w-10" />
               <span className="font-serif-display text-3xl font-bold text-[#002045] dark:text-white">
                 YourPets
               </span>
@@ -72,13 +79,13 @@ export const Footer: React.FC = () => {
                 <Mail className="w-4 h-4 text-emerald-600" /> Join Our Companion Club
               </h4>
               <p className="text-xs text-on-surface-variant mb-3">
-                Receive new arrival alerts, rare breed listings, and $150 off your first pet reservation.
+                Be first to hear when new puppies, kittens and rare breeds arrive.
               </p>
 
               {subscribed ? (
                 <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-xl border border-emerald-200">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  Subscription confirmed! Check your email for special welcome code.
+                  You are on the list — we will be in touch when new pets arrive.
                 </div>
               ) : (
                 <form onSubmit={handleSubscribe} className="flex gap-2">
@@ -108,28 +115,23 @@ export const Footer: React.FC = () => {
             </h4>
             <ul className="space-y-2 text-xs text-on-surface-variant">
               <li>
-                <button onClick={() => setActiveTab('browse')} className="hover:text-[#002045] dark:hover:text-white transition-colors">
+                <button onClick={() => browseWith('dog')} className="hover:text-[#002045] dark:hover:text-white transition-colors">
                   Shop Puppies
                 </button>
               </li>
               <li>
-                <button onClick={() => setActiveTab('browse')} className="hover:text-[#002045] dark:hover:text-white transition-colors">
+                <button onClick={() => browseWith('cat')} className="hover:text-[#002045] dark:hover:text-white transition-colors">
                   Shop Kittens
                 </button>
               </li>
               <li>
-                <button onClick={() => setActiveTab('browse')} className="hover:text-[#002045] dark:hover:text-white transition-colors">
+                <button onClick={() => browseWith(undefined, 'rare')} className="hover:text-[#002045] dark:hover:text-white transition-colors">
                   Rare & Exotic Breeds
                 </button>
               </li>
               <li>
-                <button onClick={() => setActiveTab('browse')} className="hover:text-[#002045] dark:hover:text-white transition-colors">
-                  Standard AKC Breeds
-                </button>
-              </li>
-              <li>
-                <button onClick={() => setActiveTab('browse')} className="hover:text-[#002045] dark:hover:text-white transition-colors">
-                  New Arrivals
+                <button onClick={() => browseWith()} className="hover:text-[#002045] dark:hover:text-white transition-colors">
+                  View Full Catalog
                 </button>
               </li>
             </ul>
@@ -179,12 +181,12 @@ export const Footer: React.FC = () => {
                 <MapPin className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" /> Beverly Hills, CA & Aspen, CO
               </p>
               <a
-                href="https://wa.me/13305161283"
+                href={whatsappLink()}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 hover:text-emerald-600 transition-colors"
               >
-                <Phone className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" /> WhatsApp: +1 (330) 516-1283
+                <Phone className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" /> WhatsApp: {WHATSAPP_DISPLAY}
               </a>
               <a
                 href="mailto:craftking990@gmail.com"
@@ -202,26 +204,9 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Copyright & Legal links */}
-        <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-on-surface-variant">
+        {/* Bottom Copyright */}
+        <div className="pt-8 text-center md:text-left text-xs text-on-surface-variant">
           <p>© 2026 YourPets Luxury E-Commerce. Ethical Breeding & Health Guaranteed.</p>
-          <div className="flex flex-wrap gap-6">
-            <button onClick={() => setActiveTab('health-guarantee')} className="hover:text-[#002045] transition-colors">
-              Ethical Policy
-            </button>
-            <button onClick={() => setActiveTab('health-guarantee')} className="hover:text-[#002045] transition-colors">
-              Health Guarantee
-            </button>
-            <button onClick={() => setActiveTab('breeders')} className="hover:text-[#002045] transition-colors">
-              Breeder Verification
-            </button>
-            <button onClick={() => setActiveTab('faqs')} className="hover:text-[#002045] transition-colors">
-              Privacy Policy
-            </button>
-            <button onClick={() => setActiveTab('faqs')} className="hover:text-[#002045] transition-colors">
-              Terms & Conditions
-            </button>
-          </div>
         </div>
       </div>
     </footer>

@@ -1,6 +1,9 @@
 import React from 'react';
 import { User, ShoppingBag, Heart, ShieldCheck, Mail, LogOut, KeyRound, CheckCircle2 } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { mainPhotoOf } from '../lib/petImages';
+import { PetPhoto } from '../components/PetPhoto';
+import { SignInRequired } from '../components/SignInRequired';
 
 export const UserDashboardView: React.FC = () => {
   const {
@@ -22,36 +25,19 @@ export const UserDashboardView: React.FC = () => {
 
   if (!currentUser || !currentUser.isLoggedIn) {
     return (
-      <div className="max-w-2xl mx-auto my-12 p-8 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 text-center space-y-6 shadow-lg animate-fade-in">
-        <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center mx-auto">
-          <User className="w-8 h-8" />
-        </div>
-
-        <div className="space-y-2">
-          <h2 className="font-serif-display font-bold text-2xl md:text-3xl text-on-surface">
-            VIP Client Portal & Order History
-          </h2>
-          <p className="text-xs text-on-surface-variant max-w-md mx-auto">
-            Log in to view your baby pet reservations, live flight passports, and saved preferences.
+      <div className="space-y-8 animate-fade-in pb-16">
+        <div className="p-8 rounded-3xl bg-[#002045] text-white shadow-xl">
+          <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Your account</span>
+          <h1 className="font-serif-display font-bold text-3xl md:text-4xl">Orders &amp; reservations</h1>
+          <p className="text-xs text-white/80 mt-1">
+            {rememberedEmail ? `Signed out — welcome back, ${rememberedEmail}` : 'Sign in to follow your reservations.'}
           </p>
         </div>
 
-        {rememberedEmail && (
-          <div className="p-4 rounded-2xl bg-surface-low dark:bg-surface-high border border-outline-variant/30 max-w-sm mx-auto text-xs space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block flex items-center justify-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Saved Email Address
-            </span>
-            <p className="font-bold text-on-surface text-sm">{rememberedEmail}</p>
-            <p className="text-[11px] text-on-surface-variant">Simply enter password to sign back in</p>
-          </div>
-        )}
-
-        <button
-          onClick={() => setIsAuthModalOpen(true)}
-          className="bg-[#002045] text-white px-8 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-[#1a365d] transition-colors shadow-md"
-        >
-          {rememberedEmail ? 'Enter Password & Sign In' : 'Sign In or Create Account'}
-        </button>
+        <SignInRequired
+          title="Sign in to your account"
+          message="See your reservations, delivery updates and saved pets in one place."
+        />
       </div>
     );
   }
@@ -112,9 +98,9 @@ export const UserDashboardView: React.FC = () => {
                     className="p-4 rounded-2xl bg-surface-low dark:bg-surface-high border border-outline-variant/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
                   >
                     <div className="flex items-center gap-3">
-                      <img src={order.pet.images[0]} alt={order.pet.name} className="w-14 h-14 rounded-xl object-cover" />
+                      <PetPhoto src={mainPhotoOf(order.pet)} alt={order.pet.breed} className="w-14 h-14 rounded-xl object-cover shrink-0" />
                       <div className="text-xs">
-                        <h4 className="font-bold text-on-surface">{order.pet.breed} ({order.pet.name})</h4>
+                        <h4 className="font-bold text-on-surface">{order.pet.breed}</h4>
                         <p className="text-on-surface-variant">Order #{order.id} • {order.orderDate}</p>
                         <span className="text-emerald-600 font-semibold">{order.status}</span>
                       </div>
@@ -146,7 +132,7 @@ export const UserDashboardView: React.FC = () => {
             <div className="space-y-2">
               {wishlistedPets.slice(0, 3).map(p => (
                 <div key={p.id} className="flex items-center gap-3 text-xs">
-                  <img src={p.images[0]} alt={p.name} className="w-10 h-10 rounded-lg object-cover" />
+                  <PetPhoto src={mainPhotoOf(p)} alt={p.breed} className="w-10 h-10 rounded-lg object-cover shrink-0" />
                   <div>
                     <h5 className="font-bold text-on-surface">{p.breed}</h5>
                     <p className="text-on-surface-variant">${p.priceUSD.toLocaleString()}</p>

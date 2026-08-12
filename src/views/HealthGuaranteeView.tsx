@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Stethoscope, CheckCircle2, Award, Heart, HelpCircle } from 'lucide-react';
+import { ShieldCheck, Stethoscope, Award } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
 
 export const HealthGuaranteeView: React.FC = () => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { MessageCircle, X, Send, Bot, ShieldCheck, User } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, ShieldCheck } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
 
 export const LiveChatDrawer: React.FC = () => {
   const { isChatOpen, setIsChatOpen } = usePetStore();
@@ -94,7 +95,7 @@ export const LiveChatDrawer: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <a
-            href="https://wa.me/13305161283"
+            href={whatsappLink()}
             target="_blank"
             rel="noreferrer"
             className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors"

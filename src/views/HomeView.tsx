@@ -1,27 +1,35 @@
 import React from 'react';
 import {
-  Sparkles, ShieldCheck, Award, Heart, ArrowRight, Camera,
-  CheckCircle2, Stethoscope, Plane, Users, Star, BookOpen, HelpCircle
+  Sparkles, ShieldCheck, ArrowRight, Camera,
+  Stethoscope, Plane, Users, Star
 } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { breedPhoto } from '../lib/petImages';
+import { Avatar, PetPhoto } from '../components/PetPhoto';
 import { PetCard } from '../components/PetCard';
-import { SAMPLE_REVIEWS, SAMPLE_ARTICLES, SAMPLE_FAQS } from '../data/pets';
+import { SAMPLE_REVIEWS } from '../data/pets';
 
 export const HomeView: React.FC = () => {
   const {
     pets,
-    breeders,
     setActiveTab,
     setIsQuizOpen,
     setIsBreedIdentifierOpen,
-    setFilterState,
-    setSelectedPetId,
-    setSelectedBreeder
+    setFilterState
   } = usePetStore();
 
-  const featuredPets = pets.filter(p => p.isFeatured || p.isBestSeller).slice(0, 4);
-  const rarePets = pets.filter(p => p.breedType === 'rare').slice(0, 3);
-  const newArrivals = pets.filter(p => p.isNewArrival || p.ageMonths <= 3).slice(0, 4);
+  // Looked up by breed rather than imported by file name, so renaming or
+  // replacing a photo never breaks the build.
+  const heroPhoto = breedPhoto('Golden Retriever');
+  const puppiesPhoto = breedPhoto('Samoyed');
+  const kittensPhoto = breedPhoto('Ragdoll Kitten');
+  const rarePhoto = breedPhoto('Savannah Cat');
+
+  // One card per pet: highlights come first, then the rest of the catalog fills in.
+  const highlightedPets = [
+    ...pets.filter(p => p.isFeatured || p.isBestSeller),
+    ...pets.filter(p => !p.isFeatured && !p.isBestSeller)
+  ].slice(0, 8);
 
   const handleCategoryClick = (species?: 'dog' | 'cat', breedType?: 'rare' | 'standard') => {
     setFilterState(prev => ({
@@ -35,15 +43,9 @@ export const HomeView: React.FC = () => {
   return (
     <div className="space-y-20 animate-fade-in pb-12">
       {/* 1. Hero Section */}
-      <section className="relative overflow-hidden rounded-3xl bg-[#002045] text-white my-4 shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#002045] via-[#002045]/90 to-transparent z-10 pointer-events-none" />
-        <img
-          src="https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=1600"
-          alt="Luxury Companion Puppies and Kittens"
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-40 transform scale-105"
-        />
-
-        <div className="relative z-20 max-w-3xl px-6 py-20 md:py-28 md:px-12 space-y-6">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#002045] via-[#04305f] to-emerald-950 text-white my-4 shadow-2xl">
+        <div className="relative z-20 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center px-6 py-16 md:py-20 md:px-12">
+        <div className="lg:col-span-7 space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-emerald-300">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             100% Health Certified & Ethically Bred Companions
@@ -79,14 +81,7 @@ export const HomeView: React.FC = () => {
               className="bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border border-emerald-400/40 px-6 py-3.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all shadow-lg flex items-center gap-2"
               id="hero-photo-scan-btn"
             >
-              <Camera className="w-4 h-4 text-emerald-300" /> Photo Breed & Price Scan
-            </button>
-
-            <button
-              onClick={() => setIsQuizOpen(true)}
-              className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-6 py-3.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2"
-            >
-              <Sparkles className="w-4 h-4 text-emerald-300" /> AI Pet Matchmaker
+              <Camera className="w-4 h-4 text-emerald-300" /> Photo Breed Scan
             </button>
           </div>
 
@@ -106,6 +101,25 @@ export const HomeView: React.FC = () => {
             </div>
           </div>
         </div>
+
+          {/* Real photos, shown at their natural size rather than stretched
+              across the banner. */}
+          <div className="hidden lg:grid lg:col-span-5 grid-cols-2 gap-4">
+            {[
+              { src: heroPhoto, alt: 'Golden Retriever puppy' },
+              { src: puppiesPhoto, alt: 'Samoyed puppy' },
+              { src: rarePhoto, alt: 'Savannah kitten' },
+              { src: kittensPhoto, alt: 'Ragdoll kitten' }
+            ].map(photo => (
+              <PetPhoto
+                key={photo.alt}
+                src={photo.src}
+                alt={photo.alt}
+                className="aspect-square w-full rounded-3xl object-cover shadow-xl ring-1 ring-white/15"
+              />
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* 2. Category Bento Grid */}
@@ -116,15 +130,16 @@ export const HomeView: React.FC = () => {
           <p className="text-xs text-on-surface-variant">Browse ethically raised standard breeds and rare international lineages.</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Category 1: Puppies */}
           <div
             onClick={() => handleCategoryClick('dog', 'standard')}
             className="group relative h-72 rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all"
           >
-            <img
-              src="https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=800"
-              alt="Healthy Puppies"
+            <PetPhoto
+              src={puppiesPhoto}
+              alt="Puppies"
+              caption="Puppies"
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-6 flex flex-col justify-end text-white">
@@ -141,9 +156,10 @@ export const HomeView: React.FC = () => {
             onClick={() => handleCategoryClick('cat', 'standard')}
             className="group relative h-72 rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all"
           >
-            <img
-              src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=800"
-              alt="Purebred Kittens"
+            <PetPhoto
+              src={kittensPhoto}
+              alt="Kittens"
+              caption="Kittens"
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-6 flex flex-col justify-end text-white">
@@ -160,9 +176,10 @@ export const HomeView: React.FC = () => {
             onClick={() => handleCategoryClick(undefined, 'rare')}
             className="group relative h-72 rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all"
           >
-            <img
-              src="https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&q=80&w=800"
-              alt="Rare Breed VIP"
+            <PetPhoto
+              src={rarePhoto}
+              alt="Rare breeds"
+              caption="Rare breeds"
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-6 flex flex-col justify-end text-white">
@@ -205,7 +222,7 @@ export const HomeView: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-emerald-600">Handpicked Excellence</span>
-            <h2 className="font-serif-display font-bold text-3xl text-on-surface">Featured Pets</h2>
+            <h2 className="font-serif-display font-bold text-3xl text-on-surface">Available Companions</h2>
           </div>
           <button
             onClick={() => setActiveTab('browse')}
@@ -215,44 +232,14 @@ export const HomeView: React.FC = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredPets.map(pet => (
+        <div className="stagger-children grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {highlightedPets.map(pet => (
             <PetCard key={pet.id} pet={pet} />
           ))}
         </div>
       </section>
 
-      {/* 4. Rare Breeds VIP Spotlight */}
-      <section className="p-8 md:p-12 rounded-3xl bg-surface-low dark:bg-surface-high border border-outline-variant/30 space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-          <div className="space-y-2 max-w-xl">
-            <span className="gold-badge px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest inline-flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" /> Rare Breed VIP Reserve
-            </span>
-            <h2 className="font-serif-display font-bold text-3xl md:text-4xl text-on-surface">
-              Exotic Lineages & Rare Heritage
-            </h2>
-            <p className="text-xs text-on-surface-variant">
-              Exclusively sourced from master breeders around the world with full pedigree verification and VIP climate flight escort.
-            </p>
-          </div>
-
-          <button
-            onClick={() => handleCategoryClick(undefined, 'rare')}
-            className="bg-[#002045] text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[#1a365d] transition-colors"
-          >
-            Explore All Rare Breeds
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {rarePets.map(pet => (
-            <PetCard key={pet.id} pet={pet} />
-          ))}
-        </div>
-      </section>
-
-      {/* 5. Why Choose YourPets (Trust Badges) */}
+      {/* 4. Why Choose YourPets (Trust Badges) */}
       <section className="space-y-8">
         <div className="text-center space-y-2 max-w-xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-widest text-emerald-600">The YourPets Promise</span>
@@ -294,57 +281,7 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. Verified Breeders Showcase */}
-      <section className="space-y-6">
-        <div className="flex justify-between items-end">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-emerald-600">Ethical Partners</span>
-            <h2 className="font-serif-display font-bold text-3xl text-on-surface">Verified Master Breeders</h2>
-          </div>
-          <button
-            onClick={() => setActiveTab('breeders')}
-            className="text-xs font-bold uppercase tracking-wider text-[#002045] dark:text-emerald-400 hover:underline"
-          >
-            Meet All Breeders →
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {breeders.map(b => (
-            <div key={b.id} className="p-6 rounded-2xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
-              <div className="flex items-center gap-4">
-                <img src={b.photo} alt={b.name} className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500" />
-                <div>
-                  <h3 className="font-serif-display font-bold text-base text-on-surface">{b.name}</h3>
-                  <p className="text-xs text-on-surface-variant">{b.location}</p>
-                  <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Verified ({b.experienceYears} Years Exp.)
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-2">
-                {b.bio}
-              </p>
-
-              <div className="flex items-center justify-between pt-2 border-t border-outline-variant/20 text-xs">
-                <span className="font-bold text-[#002045] dark:text-emerald-400">Rating: {b.rating}★ ({b.petsSold}+ placed)</span>
-                <button
-                  onClick={() => {
-                    setSelectedBreeder(b);
-                    setActiveTab('breeders');
-                  }}
-                  className="font-semibold text-xs text-[#002045] hover:underline"
-                >
-                  View Cattery / Kennel →
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 7. Real Customer Reviews */}
+      {/* 5. Real Customer Reviews */}
       <section className="p-8 md:p-12 rounded-3xl bg-[#002045] text-white space-y-8">
         <div className="text-center space-y-2 max-w-xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-widest text-emerald-300">Verified Buyer Testimonials</span>
@@ -364,10 +301,10 @@ export const HomeView: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3 pt-3 border-t border-white/10">
-                <img src={r.avatar} alt={r.authorName} className="w-10 h-10 rounded-full object-cover" />
+                <Avatar src={r.avatar} name={r.authorName} className="w-10 h-10 rounded-full object-cover shrink-0" />
                 <div className="text-xs">
                   <h4 className="font-bold text-white">{r.authorName}</h4>
-                  <p className="text-emerald-300 text-[11px]">{r.petName} ({r.petBreed}) • {r.location}</p>
+                  <p className="text-emerald-300 text-[11px]">{r.petBreed} • {r.location}</p>
                 </div>
               </div>
             </div>
@@ -375,49 +312,6 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* 8. Care Guide Articles */}
-      <section className="space-y-6">
-        <div className="flex justify-between items-end">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-emerald-600">Pet Wellness</span>
-            <h2 className="font-serif-display font-bold text-3xl text-on-surface">Latest Care Guide Articles</h2>
-          </div>
-          <button
-            onClick={() => setActiveTab('pet-care')}
-            className="text-xs font-bold uppercase tracking-wider text-[#002045] dark:text-emerald-400 hover:underline"
-          >
-            Read All Articles →
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {SAMPLE_ARTICLES.map(art => (
-            <div
-              key={art.id}
-              onClick={() => setActiveTab('pet-care')}
-              className="group bg-white dark:bg-[#1f2226] rounded-2xl border border-outline-variant/30 overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all"
-            >
-              <div className="h-44 overflow-hidden">
-                <img src={art.image} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              </div>
-              <div className="p-5 space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full">
-                  {art.category}
-                </span>
-                <h3 className="font-serif-display font-bold text-base text-on-surface group-hover:text-[#002045] transition-colors">
-                  {art.title}
-                </h3>
-                <p className="text-xs text-on-surface-variant line-clamp-2">
-                  {art.summary}
-                </p>
-                <div className="pt-2 text-[11px] text-on-surface-variant font-medium">
-                  {art.readTime} • By {art.author}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   );
 };

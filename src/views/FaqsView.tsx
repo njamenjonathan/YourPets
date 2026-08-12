@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HelpCircle, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { SAMPLE_FAQS } from '../data/pets';
 import { usePetStore } from '../context/PetStoreContext';
 

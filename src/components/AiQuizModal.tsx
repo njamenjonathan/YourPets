@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Check, ArrowRight, Loader2, Award, Heart } from 'lucide-react';
+import { X, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
 
 export const AiQuizModal: React.FC = () => {
@@ -9,7 +9,7 @@ export const AiQuizModal: React.FC = () => {
     pets,
     setSelectedPetId,
     setActiveTab,
-    addToCart
+    setSearchQuery
   } = usePetStore();
 
   const [step, setStep] = useState(1);
@@ -62,10 +62,23 @@ export const AiQuizModal: React.FC = () => {
   };
 
   const handleSelectRecommendation = (breedName: string) => {
-    const matchedPet = pets.find(p => p.breed.toLowerCase().includes(breedName.toLowerCase())) || pets[0];
-    setSelectedPetId(matchedPet.id);
-    setActiveTab('pet-detail');
+    const needle = breedName.toLowerCase();
+    const matchedPet = pets.find(
+      p => p.breed.toLowerCase().includes(needle) || needle.includes(p.breed.toLowerCase())
+    );
+
     setIsQuizOpen(false);
+
+    if (matchedPet) {
+      setSelectedPetId(matchedPet.id);
+      setActiveTab('pet-detail');
+      return;
+    }
+
+    // We do not currently stock that breed — show the closest thing we do have
+    // rather than opening an unrelated pet as if it were the match.
+    setSearchQuery(breedName.split(' ')[0]);
+    setActiveTab('browse');
   };
 
   return (

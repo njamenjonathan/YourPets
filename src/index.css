@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @variant dark (&:where(.dark, .dark *));
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+
+/* Fonts are loaded with <link rel="preconnect"> in index.html so they start
+   downloading immediately instead of waiting for this stylesheet. */
 
 @layer base {
   :root {
@@ -131,8 +133,68 @@
   }
 }
 
+/* Used across every view — it was referenced before it existed, so nothing
+   actually faded in. */
+.animate-fade-in {
+  animation: fade-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Cards in a grid arrive in a gentle cascade rather than all at once. */
+.stagger-children > * {
+  animation: fade-in 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 40ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 80ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 160ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 280ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 320ms; }
+.stagger-children > *:nth-child(n + 9) { animation-delay: 360ms; }
+
+/* Consistent, quiet focus ring for keyboard users on every control. */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Images fade in as they decode instead of popping. */
+img {
+  transition: opacity 300ms ease;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .page-transition {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .page-transition,
+  .animate-fade-in,
+  .stagger-children > * {
     animation: none;
+  }
+
+  .card-elevation,
+  .card-elevation:hover {
+    transform: none;
+    transition: none;
   }
 }

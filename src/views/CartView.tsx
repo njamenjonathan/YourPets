@@ -1,6 +1,9 @@
 import React from 'react';
-import { ShoppingBag, Trash2, ArrowRight, ShieldCheck, CheckCircle2, Lock } from 'lucide-react';
+import { ShoppingBag, Trash2, ArrowRight, CheckCircle2, Lock } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { mainPhotoOf } from '../lib/petImages';
+import { PetPhoto } from '../components/PetPhoto';
+import { SignInRequired } from '../components/SignInRequired';
 
 export const CartView: React.FC = () => {
   const {
@@ -9,30 +12,20 @@ export const CartView: React.FC = () => {
     updateCartAddons,
     formatPrice,
     setActiveTab,
-    currentUser,
-    setIsAuthModalOpen
+    currentUser
   } = usePetStore();
 
   if (!currentUser?.isLoggedIn) {
     return (
       <div className="space-y-8 animate-fade-in pb-16">
         <div className="p-8 rounded-3xl bg-[#002045] text-white">
-          <h1 className="font-serif-display font-bold text-3xl">Your Shopping Cart</h1>
+          <h1 className="font-serif-display font-bold text-3xl">Your Cart</h1>
         </div>
 
-        <div className="p-16 text-center bg-white dark:bg-[#1f2226] rounded-3xl border border-outline-variant/30 space-y-4 shadow-sm">
-          <Lock className="w-16 h-16 mx-auto text-amber-500" />
-          <h3 className="font-serif-display font-bold text-2xl text-on-surface">Sign In Required</h3>
-          <p className="text-xs text-on-surface-variant max-w-sm mx-auto">
-            Only logged in accounts can place orders and view their wishlist and cart.
-          </p>
-          <button
-            onClick={() => setIsAuthModalOpen(true)}
-            className="bg-[#002045] text-white px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[#1a365d] transition-colors shadow-md"
-          >
-            Sign In / Register Account
-          </button>
-        </div>
+        <SignInRequired
+          title="Sign in to see your cart"
+          message="An account keeps your chosen companions and delivery details together."
+        />
       </div>
     );
   }
@@ -46,7 +39,8 @@ export const CartView: React.FC = () => {
     return acc + add;
   }, 0);
 
-  const deliveryCost = cart.length > 0 ? 150 : 0;
+  // Matches the domestic rate in checkout; international destinations are $200.
+  const deliveryCost = cart.length > 0 ? 100 : 0;
   const taxes = Math.round((subtotal + addonsTotal) * 0.08);
   const totalAmount = subtotal + addonsTotal + deliveryCost + taxes;
 
@@ -94,14 +88,14 @@ export const CartView: React.FC = () => {
             >
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <img
-                    src={item.pet.images[0]}
-                    alt={item.pet.name}
-                    className="w-20 h-20 rounded-2xl object-cover"
+                  <PetPhoto
+                    src={mainPhotoOf(item.pet)}
+                    alt={item.pet.breed}
+                    className="w-20 h-20 rounded-2xl object-cover shrink-0"
                   />
                   <div>
                     <h3 className="font-serif-display font-bold text-lg text-on-surface">
-                      {item.pet.breed} ({item.pet.name})
+                      {item.pet.breed}
                     </h3>
                     <p className="text-xs text-on-surface-variant">
                       {item.pet.gender} • {item.pet.color} • {item.pet.locationCityState}
@@ -181,7 +175,7 @@ export const CartView: React.FC = () => {
               </div>
 
               <div className="flex justify-between">
-                <span>Climate Flight / Ground Shipping</span>
+                <span>Climate Flight Transport (from)</span>
                 <span className="font-bold text-on-surface">{formatPrice(deliveryCost)}</span>
               </div>
 

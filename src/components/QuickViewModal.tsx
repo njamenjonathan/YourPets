@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { X, CheckCircle2, ShieldCheck, Heart, ShoppingBag, Award, Sparkles, Stethoscope } from 'lucide-react';
+import { X, CheckCircle2, Heart, ShoppingBag, Sparkles, Stethoscope } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
+import { photosFor } from '../lib/petImages';
+import { PetPhoto } from './PetPhoto';
 
 export const QuickViewModal: React.FC = () => {
   const {
@@ -22,6 +24,7 @@ export const QuickViewModal: React.FC = () => {
   if (!isQuickViewOpen || !pet) return null;
 
   const isWishlisted = wishlist.includes(pet.id);
+  const gallery = photosFor(pet);
 
   const handleFullProfile = () => {
     setSelectedPetId(pet.id);
@@ -43,9 +46,11 @@ export const QuickViewModal: React.FC = () => {
         {/* Left: Image Gallery Preview */}
         <div className="md:w-1/2 p-6 bg-surface-low dark:bg-surface-high flex flex-col justify-between gap-4">
           <div className="relative aspect-square rounded-2xl overflow-hidden bg-white dark:bg-[#1f2226] shadow-sm">
-            <img
-              src={pet.images[activeImageIdx]}
-              alt={pet.name}
+            <PetPhoto
+              src={gallery[activeImageIdx]}
+              alt={pet.breed}
+              caption={pet.breed}
+              priority
               className="w-full h-full object-cover transition-all duration-300"
             />
             <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 rounded-full px-3 py-1 text-emerald-600 font-semibold text-xs flex items-center gap-1 shadow-sm">
@@ -54,19 +59,22 @@ export const QuickViewModal: React.FC = () => {
           </div>
 
           {/* Thumbnails */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {pet.images.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveImageIdx(i)}
-                className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
-                  activeImageIdx === i ? 'border-[#002045] dark:border-white scale-105' : 'border-transparent opacity-60'
-                }`}
-              >
-                <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
+          {gallery.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {gallery.map((img, i) => (
+                <button
+                  key={img}
+                  onClick={() => setActiveImageIdx(i)}
+                  aria-label={`View photo ${i + 1} of this ${pet.breed}`}
+                  className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                    activeImageIdx === i ? 'border-[#002045] dark:border-white scale-105' : 'border-transparent opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <PetPhoto src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right: Quick Info & Actions */}
@@ -86,7 +94,7 @@ export const QuickViewModal: React.FC = () => {
             </div>
 
             <h2 className="font-serif-display font-bold text-2xl text-on-surface mb-1">
-              {pet.breed} ({pet.name})
+              {pet.breed}
             </h2>
 
             <div className="flex items-baseline gap-3 mb-4">

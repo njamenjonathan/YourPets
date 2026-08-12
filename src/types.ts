@@ -3,7 +3,6 @@ export interface UserAccount {
   email: string;
   uid?: string;
   role?: 'customer' | 'admin';
-  twoFactorVerified?: boolean;
   isLoggedIn: boolean;
   memberSince?: string;
 }
@@ -109,7 +108,6 @@ export interface FilterState {
   traits: string[];
   vaccinatedOnly: boolean;
   microchippedOnly: boolean;
-  searchQuery: string;
   sortBy: 'recommended' | 'price-asc' | 'price-desc' | 'newest' | 'rating';
 }
 
@@ -163,4 +161,3 @@ export interface Order {
 }
 
 export type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
-export type Language = 'en' | 'fr' | 'es' | 'de';

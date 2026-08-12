@@ -1,5 +1,4 @@
 import React from 'react';
-import { BookOpen, User, Calendar, Clock } from 'lucide-react';
 import { SAMPLE_ARTICLES } from '../data/pets';
 
 export const PetCareView: React.FC = () => {
