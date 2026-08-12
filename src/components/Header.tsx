@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
 import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
-import { YourPetsLogo } from './YourPetsLogo';
+import { YourPetsWordmark } from './YourPetsLogo';
 import { Currency } from '../types';
 
 
@@ -18,6 +18,9 @@ const NAV_LINKS: Array<{ tab: string; label: string }> = [
   { tab: 'faqs', label: 'FAQs' },
   { tab: 'contact', label: 'Contact' }
 ];
+
+/** Only meaningful once there is an account to hold the orders. */
+const SIGNED_IN_LINK = { tab: 'order-tracking', label: 'My Orders' };
 
 
 export const Header: React.FC = () => {
@@ -72,6 +75,11 @@ export const Header: React.FC = () => {
   const cartItemsCount = cart.length;
   const wishlistCount = wishlist.length;
   const isAdmin = currentUser?.isLoggedIn && currentUser.role === 'admin';
+
+  // "My Orders" appears for signed-in customers only.
+  const navLinks = currentUser?.isLoggedIn
+    ? [NAV_LINKS[0], NAV_LINKS[1], SIGNED_IN_LINK, ...NAV_LINKS.slice(2)]
+    : NAV_LINKS;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#f9f9f9]/90 dark:bg-[#1a1c1e]/90 backdrop-blur-xl border-b border-outline-variant/30 dark:border-outline-variant/10 transition-colors">
@@ -134,25 +142,22 @@ export const Header: React.FC = () => {
             className="text-left group flex items-center gap-2.5"
             id="brand-logo"
           >
-            <YourPetsLogo />
-            <div className="flex flex-col min-w-0">
-              <span className="font-serif-display text-2xl lg:text-3xl font-bold tracking-tight text-[#002045] dark:text-white group-hover:opacity-90 transition-opacity leading-none whitespace-nowrap">
-                YourPets
-              </span>
-              <span className="text-[9px] font-extrabold tracking-widest uppercase text-amber-600 dark:text-amber-400 leading-none mt-1 whitespace-nowrap">
-                Luxury Concierge
-              </span>
-            </div>
+            <YourPetsWordmark
+              className="text-[#002045] dark:text-white group-hover:opacity-90 transition-opacity"
+              textClassName="text-2xl lg:text-3xl"
+              tagline="Luxury Concierge"
+              taglineClassName="text-[9px] font-extrabold tracking-widest uppercase text-amber-600 dark:text-amber-400"
+            />
           </button>
         </div>
 
         {/* Center: Primary Links (Desktop) */}
         <nav className="hidden lg:flex items-center gap-3 xl:gap-6 2xl:gap-8 text-xs xl:text-sm font-medium shrink min-w-0">
-          {NAV_LINKS.map(link => (
+          {navLinks.map(link => (
             <button
               key={link.tab}
               onClick={() => setActiveTab(link.tab)}
-              className={`transition-colors whitespace-nowrap shrink-0 ${activeTab === link.tab ? 'text-[#002045] dark:text-white font-bold border-b-2 border-[#002045] dark:border-white pb-1' : 'text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
+              className={`whitespace-nowrap shrink-0 no-press ${activeTab === link.tab ? 'text-[#002045] dark:text-white font-bold border-b-2 border-[#002045] dark:border-white pb-1' : 'nav-link text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
             >
               {link.label}
             </button>
@@ -339,7 +344,7 @@ export const Header: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-2 pb-4 border-b border-outline-variant/30">
-            {NAV_LINKS.map(link => (
+            {navLinks.map(link => (
               <button
                 key={link.tab}
                 onClick={() => { setActiveTab(link.tab); setIsMobileMenuOpen(false); }}

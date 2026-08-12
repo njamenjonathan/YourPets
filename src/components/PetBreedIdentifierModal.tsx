@@ -148,8 +148,8 @@ export const PetBreedIdentifierModal: React.FC = () => {
     : [];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-3xl bg-white dark:bg-[#1a1c1e] rounded-3xl shadow-2xl border border-outline-variant/30 overflow-hidden max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md modal-backdrop">
+      <div className="relative w-full max-w-3xl bg-white dark:bg-[#1a1c1e] rounded-3xl shadow-2xl border border-outline-variant/30 overflow-hidden max-h-[90vh] flex flex-col modal-panel">
         {/* Header Bar */}
         <div className="flex items-center justify-between p-5 md:p-6 border-b border-outline-variant/30 bg-gradient-to-r from-emerald-950 via-[#002045] to-emerald-900 text-white">
           <div className="flex items-center gap-3">

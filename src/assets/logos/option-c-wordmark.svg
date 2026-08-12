@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 40" width="168" height="40" role="img" aria-label="YourPets">
+  <title>YourPets — horizontal wordmark</title>
+  <!-- Green paw mark, then the name in currentColor so it follows the theme. -->
+  <g fill="#458500">
+    <ellipse cx="10.4" cy="15.2" rx="2.6" ry="3.3"/>
+    <ellipse cx="17.4" cy="13.1" rx="2.7" ry="3.5"/>
+    <ellipse cx="24.4" cy="15.2" rx="2.6" ry="3.3"/>
+    <ellipse cx="4.6" cy="20.6" rx="2.3" ry="2.9"/>
+    <path d="M17.4 19.4c4.2 0 7.6 3 7.6 6.4 0 2.7-2.4 4.2-5 4.2-1.2 0-1.9-.4-2.6-.4s-1.4.4-2.6.4c-2.6 0-5-1.5-5-4.2 0-3.4 3.4-6.4 7.6-6.4Z"/>
+  </g>
+  <text x="36" y="27.5" font-family="'Playfair Display', Georgia, serif" font-size="23" font-weight="700"
+        fill="currentColor" letter-spacing="-0.3">Your<tspan fill="#458500">Pets</tspan></text>
+</svg>

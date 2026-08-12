@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Lock, Mail, User, ShieldCheck, ArrowRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
-import { YourPetsLogo } from './YourPetsLogo';
+import { YourPetsMark } from './YourPetsLogo';
+import { useModalTransition } from '../lib/useModalTransition';
 
 export const AuthModal: React.FC = () => {
   const {
@@ -38,7 +39,8 @@ export const AuthModal: React.FC = () => {
     }
   }, [rememberedEmail, currentUser, isAuthModalOpen]);
 
-  if (!isAuthModalOpen) return null;
+  const { mounted, closing } = useModalTransition(isAuthModalOpen);
+  if (!mounted) return null;
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,8 +120,8 @@ export const AuthModal: React.FC = () => {
   const isRememberedActive = useRemembered && !!rememberedEmail && mode === 'login';
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-      <div className="bg-white dark:bg-[#1a1c1e] text-on-surface w-full max-w-md rounded-3xl shadow-2xl border border-outline-variant/30 overflow-hidden relative">
+    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md modal-backdrop ${closing ? 'is-closing' : ''}`}>
+      <div className={`bg-white dark:bg-[#1a1c1e] text-on-surface w-full max-w-md rounded-3xl shadow-2xl border border-outline-variant/30 overflow-hidden relative modal-panel ${closing ? 'is-closing' : ''}`}>
         {/* Modal Header */}
         <div className="bg-[#002045] text-white p-6 relative">
           <button
@@ -130,7 +132,7 @@ export const AuthModal: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-3">
-            <YourPetsLogo className="h-11 w-11" />
+            <YourPetsMark className="h-9 w-auto shrink-0" />
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">YourPets VIP Account</span>
               <h2 className="font-serif-display font-bold text-2xl">

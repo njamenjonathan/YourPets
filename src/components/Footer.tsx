@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, Mail, CheckCircle2, Phone, MapPin, Send } from 'lucide-react';
 import { usePetStore } from '../context/PetStoreContext';
 import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
-import { YourPetsLogo } from './YourPetsLogo';
+import { YourPetsWordmark } from './YourPetsLogo';
 
 // TikTok Icon SVG
 const TikTokIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
@@ -46,10 +46,7 @@ export const Footer: React.FC = () => {
           {/* Col 1 & 2: Brand & Newsletter */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-2.5">
-              <YourPetsLogo className="h-10 w-10" />
-              <span className="font-serif-display text-3xl font-bold text-[#002045] dark:text-white">
-                YourPets
-              </span>
+              <YourPetsWordmark className="text-[#002045] dark:text-white" textClassName="text-3xl" />
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase gold-badge">
                 Luxury Standard
               </span>

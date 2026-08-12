@@ -6,9 +6,23 @@ import { PetPhoto } from '../components/PetPhoto';
 import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
 
 export const OrderTrackingView: React.FC = () => {
-  const { selectedOrder, orders, formatPrice, setActiveTab } = usePetStore();
+  const { selectedOrder, orders, formatPrice, setActiveTab, isAuthLoading } = usePetStore();
 
   const currentOrder = selectedOrder || orders[0];
+
+  // The orders subscription in the context only starts once the session is
+  // known, so show placeholders instead of "no orders" in the meantime.
+  if (isAuthLoading) {
+    return (
+      <div className="space-y-8 animate-fade-in pb-16">
+        <div className="skeleton h-32 rounded-3xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="skeleton h-44 rounded-3xl" />
+          <div className="skeleton h-44 rounded-3xl" />
+        </div>
+      </div>
+    );
+  }
 
   if (!currentOrder) {
     return (
