@@ -1,13 +1,17 @@
-﻿import express from 'express';
+import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { Resend } from 'resend';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { GoogleGenAI, Type } from '@google/genai';
+import { createServer as createViteServer } from 'vite';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = Number(process.env.PORT) || 3000;
+  const PORT = 3000;
 
   app.use(express.json({ limit: '10mb' }));
 
@@ -70,7 +74,7 @@ async function startServer() {
 
       const formattedTotal = typeof totalAmount === 'number' ? `$${totalAmount.toLocaleString('en-US')}` : `$${totalAmount}`;
 
-      const emailSubject = `New order #${orderId} â€” ${formattedTotal} USD â€” ${customerName || 'Customer'}`;
+      const emailSubject = `New order #${orderId} — ${formattedTotal} USD — ${customerName || 'Customer'}`;
 
       // Build pet details list text
       let petsText = '';
@@ -138,7 +142,7 @@ Next Step                  : Customer confirms payment & shipment on WhatsApp
       const buyerBody = `
 Hello ${customerName || 'there'},
 
-Thank you â€” we have received your reservation request.
+Thank you — we have received your reservation request.
 
   Order reference : #${orderId}
   Total to settle : ${formattedTotal} USD
@@ -154,7 +158,7 @@ No payment is taken through this website.
 
 ${WHATSAPP_LINK}
 
-â€” The YourPets concierge team
+— The YourPets concierge team
 `.trim();
 
       console.log(`\nNew order #${orderId} (${formattedTotal}) from ${customerName || 'customer'}\n`);
@@ -522,7 +526,6 @@ Analyze this pet image carefully:
 
   // Serve Vite in dev, static files in production
   if (process.env.NODE_ENV !== 'production') {
-    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',

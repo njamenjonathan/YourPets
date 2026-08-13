@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Pet, CartItem, FilterState, Order, Currency, Breeder, UserAccount } from '../types';
 import { SAMPLE_PETS, SAMPLE_BREEDERS } from '../data/pets';
 import {
@@ -51,8 +51,8 @@ const toUserAccount = (fbUser: { uid: string; email: string | null; displayName:
 };
 
 /**
- * What a customer sees for each Firebase error, plus — for the failures that
- * only a developer can fix — a precise note in the console saying what to do.
+ * What a customer sees for each Firebase error, plus â€” for the failures that
+ * only a developer can fix â€” a precise note in the console saying what to do.
  * Every case gets its own message; nothing falls back to a generic one except
  * genuinely unknown codes.
  */
@@ -66,7 +66,7 @@ const AUTH_MESSAGES: Record<string, string> = {
   'auth/invalid-credential': 'Email or password is incorrect. If you have not registered yet, use "Create Account".',
   'auth/invalid-login-credentials': 'Email or password is incorrect. If you have not registered yet, use "Create Account".',
   'auth/email-already-in-use': 'An account with this email already exists. Please sign in instead, or use "Forgot password?".',
-  'auth/weak-password': 'Please choose a longer password — at least 6 characters.',
+  'auth/weak-password': 'Please choose a longer password â€” at least 6 characters.',
   'auth/user-disabled': 'This account has been disabled. Please contact us on WhatsApp.',
   'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
   'auth/network-request-failed': 'Network problem. Check your connection and try again.',
@@ -118,8 +118,8 @@ const AUTH_SETUP_HELP: Record<string, string> = {
 
 /**
  * Finds the entry for a code. Firebase sometimes appends the server text to the
- * code itself — a bad key arrives as
- * "auth/api-key-not-valid.-please-pass-a-valid-api-key." — so an exact lookup
+ * code itself â€” a bad key arrives as
+ * "auth/api-key-not-valid.-please-pass-a-valid-api-key." â€” so an exact lookup
  * is not enough; fall back to the longest matching prefix.
  */
 const lookupByCode = <T,>(table: Record<string, T>, code: string): T | undefined => {
@@ -145,138 +145,7 @@ const authErrorMessage = (err: unknown): string => {
   if (message) return message;
 
   if (!firebaseSetup.looksConfigured) {
-    console.error('[YourPets auth] Firebase settings are missing or placeholders — see src/lib/firebase.ts.');
-    return 'Sign-in is not available right now. Please contact us on WhatsApp.';
-  }
-
-  console.error('[YourPets auth] Unhandled error:', err);
-  return (err as { message?: string })?.message || 'Something went wrong. Please try again.';
-};
-
-/**
- * Keeps a single listing per pet id so the same companion can never show up
- * twice in the catalog (or in any grid derived from it).
- */
-const dedupePets = (list: Pet[]): Pet[] => {
-  const seen = new Set<string>();
-  return list.filter(pet => {
-    if (seen.has(pet.id)) return false;
-    seen.add(pet.id);
-    return true;
-  });
-};
-
-const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || 'craftking990@gmail.com').toLowerCase();
-
-/** Builds the app's user object from a Firebase user. */
-const toUserAccount = (fbUser: { uid: string; email: string | null; displayName: string | null }): UserAccount => {
-  const email = (fbUser.email || '').toLowerCase();
-  return {
-    uid: fbUser.uid,
-    name: fbUser.displayName || email.split('@')[0] || 'Member',
-    email,
-    role: email === ADMIN_EMAIL ? 'admin' : 'customer',
-    isLoggedIn: true,
-    memberSince: new Date().getFullYear().toString()
-  };
-};
-
-/**
- * What a customer sees for each Firebase error, plus — for the failures that
- * only a developer can fix — a precise note in the console saying what to do.
- * Every case gets its own message; nothing falls back to a generic one except
- * genuinely unknown codes.
- */
-const AUTH_MESSAGES: Record<string, string> = {
-  // --- Things the customer can fix -----------------------------------------
-  'auth/invalid-email': 'That email address does not look right. Please check it and try again.',
-  'auth/missing-email': 'Please enter your email address.',
-  'auth/missing-password': 'Please enter your password.',
-  'auth/user-not-found': 'No account found with that email. Use "Create Account" to register.',
-  'auth/wrong-password': 'That password is not correct. Try again, or use "Forgot password?".',
-  'auth/invalid-credential': 'Email or password is incorrect. If you have not registered yet, use "Create Account".',
-  'auth/invalid-login-credentials': 'Email or password is incorrect. If you have not registered yet, use "Create Account".',
-  'auth/email-already-in-use': 'An account with this email already exists. Please sign in instead, or use "Forgot password?".',
-  'auth/weak-password': 'Please choose a longer password — at least 6 characters.',
-  'auth/user-disabled': 'This account has been disabled. Please contact us on WhatsApp.',
-  'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
-  'auth/network-request-failed': 'Network problem. Check your connection and try again.',
-  'auth/requires-recent-login': 'For security, please sign in again before making this change.',
-
-  // --- Google sign-in ------------------------------------------------------
-  'auth/popup-closed-by-user': 'Google sign-in was closed before it finished. Please try again.',
-  'auth/cancelled-popup-request': 'Google sign-in was interrupted. Please try again.',
-  'auth/popup-blocked': 'Your browser blocked the Google sign-in window. Allow pop-ups for this site and try again.',
-  'auth/account-exists-with-different-credential':
-    'You already have an account with this email using a different sign-in method. Try signing in with email and password.',
-
-  // --- Setup problems: friendly outside, precise in the console ------------
-  'auth/operation-not-allowed':
-    'Email and password sign-up is switched off for this site. Please contact us on WhatsApp and we will set your account up.',
-  'auth/admin-restricted-operation':
-    'New sign-ups are currently closed. Please contact us on WhatsApp and we will set your account up.',
-  'auth/unauthorized-domain':
-    'Sign-in is not allowed from this web address yet. Please contact us on WhatsApp.',
-  'auth/api-key-not-valid': 'Sign-in is temporarily unavailable. Please contact us on WhatsApp.',
-  'auth/invalid-api-key': 'Sign-in is temporarily unavailable. Please contact us on WhatsApp.',
-  'auth/configuration-not-found': 'Sign-in is temporarily unavailable. Please contact us on WhatsApp.',
-  'auth/operation-not-supported-in-this-environment':
-    'This browser cannot complete sign-in. Please try a different browser.'
-};
-
-/** Console guidance for the codes that only the site owner can resolve. */
-const AUTH_SETUP_HELP: Record<string, string> = {
-  'auth/operation-not-allowed':
-    `Email/Password sign-in is DISABLED in Firebase project "${firebaseSetup.projectId}". ` +
-    'Fix: Firebase console -> Authentication -> Sign-in method -> Email/Password -> Enable. ' +
-    'If you do not have access to that project, create your own and set VITE_FIREBASE_API_KEY, ' +
-    'VITE_FIREBASE_PROJECT_ID and VITE_FIREBASE_APP_ID in .env.',
-  'auth/admin-restricted-operation':
-    `Public sign-up is blocked in Firebase project "${firebaseSetup.projectId}". ` +
-    'Fix: Firebase console -> Authentication -> Settings -> User actions -> allow "Create (sign-up)".',
-  'auth/unauthorized-domain':
-    `"${window.location.hostname}" is not an authorised domain for project "${firebaseSetup.projectId}". ` +
-    'Fix: Firebase console -> Authentication -> Settings -> Authorized domains -> Add domain.',
-  'auth/api-key-not-valid':
-    'The Firebase API key is rejected. Check VITE_FIREBASE_API_KEY, or the apiKey in firebase-applet-config.json, ' +
-    'against Firebase console -> Project settings -> General -> Your apps -> SDK setup and config.',
-  'auth/invalid-api-key':
-    'The Firebase API key is malformed. Check VITE_FIREBASE_API_KEY or firebase-applet-config.json.',
-  'auth/configuration-not-found':
-    `Firebase Authentication has not been set up on project "${firebaseSetup.projectId}". ` +
-    'Fix: Firebase console -> Authentication -> Get started.'
-};
-
-/**
- * Finds the entry for a code. Firebase sometimes appends the server text to the
- * code itself — a bad key arrives as
- * "auth/api-key-not-valid.-please-pass-a-valid-api-key." — so an exact lookup
- * is not enough; fall back to the longest matching prefix.
- */
-const lookupByCode = <T,>(table: Record<string, T>, code: string): T | undefined => {
-  if (table[code]) return table[code];
-  const prefix = Object.keys(table)
-    .filter(key => code.startsWith(key))
-    .sort((a, b) => b.length - a.length)[0];
-  return prefix ? table[prefix] : undefined;
-};
-
-/** Turns a Firebase error into a message for the customer. */
-const authErrorMessage = (err: unknown): string => {
-  const code = (err as { code?: string })?.code || '';
-
-  const setupHelp = lookupByCode(AUTH_SETUP_HELP, code);
-  if (setupHelp) {
-    console.error(`[YourPets auth] ${code}\n  ${setupHelp}`);
-  } else if (code) {
-    console.warn(`[YourPets auth] ${code}`);
-  }
-
-  const message = lookupByCode(AUTH_MESSAGES, code);
-  if (message) return message;
-
-  if (!firebaseSetup.looksConfigured) {
-    console.error('[YourPets auth] Firebase settings are missing or placeholders — see src/lib/firebase.ts.');
+    console.error('[YourPets auth] Firebase settings are missing or placeholders â€” see src/lib/firebase.ts.');
     return 'Sign-in is not available right now. Please contact us on WhatsApp.';
   }
 
@@ -286,8 +155,8 @@ const authErrorMessage = (err: unknown): string => {
 
 const CURRENCY_RATES: Record<Currency, { symbol: string; rate: number }> = {
   USD: { symbol: '$', rate: 1.0 },
-  EUR: { symbol: '€', rate: 0.92 },
-  GBP: { symbol: '£', rate: 0.78 },
+  EUR: { symbol: 'â‚¬', rate: 0.92 },
+  GBP: { symbol: 'Â£', rate: 0.78 },
   CAD: { symbol: 'CA$', rate: 1.36 },
   AUD: { symbol: 'AU$', rate: 1.52 }
 };
@@ -571,7 +440,7 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
    */
   useEffect(() => {
     if (!currentUser?.isLoggedIn) {
-      // Signed out (or between accounts) — drop the previous member's orders.
+      // Signed out (or between accounts) â€” drop the previous member's orders.
       setOrders([]);
       return;
     }
