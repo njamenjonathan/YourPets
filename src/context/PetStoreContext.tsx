@@ -51,8 +51,8 @@ const toUserAccount = (fbUser: { uid: string; email: string | null; displayName:
 };
 
 /**
- * What a customer sees for each Firebase error, plus â€” for the failures that
- * only a developer can fix â€” a precise note in the console saying what to do.
+ * What a customer sees for each Firebase error, plus — for the failures that
+ * only a developer can fix — a precise note in the console saying what to do.
  * Every case gets its own message; nothing falls back to a generic one except
  * genuinely unknown codes.
  */
@@ -66,7 +66,7 @@ const AUTH_MESSAGES: Record<string, string> = {
   'auth/invalid-credential': 'Email or password is incorrect. If you have not registered yet, use "Create Account".',
   'auth/invalid-login-credentials': 'Email or password is incorrect. If you have not registered yet, use "Create Account".',
   'auth/email-already-in-use': 'An account with this email already exists. Please sign in instead, or use "Forgot password?".',
-  'auth/weak-password': 'Please choose a longer password â€” at least 6 characters.',
+  'auth/weak-password': 'Please choose a longer password — at least 6 characters.',
   'auth/user-disabled': 'This account has been disabled. Please contact us on WhatsApp.',
   'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
   'auth/network-request-failed': 'Network problem. Check your connection and try again.',
@@ -118,8 +118,8 @@ const AUTH_SETUP_HELP: Record<string, string> = {
 
 /**
  * Finds the entry for a code. Firebase sometimes appends the server text to the
- * code itself â€” a bad key arrives as
- * "auth/api-key-not-valid.-please-pass-a-valid-api-key." â€” so an exact lookup
+ * code itself — a bad key arrives as
+ * "auth/api-key-not-valid.-please-pass-a-valid-api-key." — so an exact lookup
  * is not enough; fall back to the longest matching prefix.
  */
 const lookupByCode = <T,>(table: Record<string, T>, code: string): T | undefined => {
@@ -145,7 +145,7 @@ const authErrorMessage = (err: unknown): string => {
   if (message) return message;
 
   if (!firebaseSetup.looksConfigured) {
-    console.error('[YourPets auth] Firebase settings are missing or placeholders â€” see src/lib/firebase.ts.');
+    console.error('[YourPets auth] Firebase settings are missing or placeholders — see src/lib/firebase.ts.');
     return 'Sign-in is not available right now. Please contact us on WhatsApp.';
   }
 
@@ -155,8 +155,8 @@ const authErrorMessage = (err: unknown): string => {
 
 const CURRENCY_RATES: Record<Currency, { symbol: string; rate: number }> = {
   USD: { symbol: '$', rate: 1.0 },
-  EUR: { symbol: 'â‚¬', rate: 0.92 },
-  GBP: { symbol: 'Â£', rate: 0.78 },
+  EUR: { symbol: '€', rate: 0.92 },
+  GBP: { symbol: '£', rate: 0.78 },
   CAD: { symbol: 'CA$', rate: 1.36 },
   AUD: { symbol: 'AU$', rate: 1.52 }
 };
@@ -440,7 +440,7 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
    */
   useEffect(() => {
     if (!currentUser?.isLoggedIn) {
-      // Signed out (or between accounts) â€” drop the previous member's orders.
+      // Signed out (or between accounts) — drop the previous member's orders.
       setOrders([]);
       return;
     }

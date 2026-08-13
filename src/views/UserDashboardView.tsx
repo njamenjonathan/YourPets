@@ -10,6 +10,7 @@ export const UserDashboardView: React.FC = () => {
     orders,
     wishlist,
     pets,
+    formatPrice,
     setActiveTab,
     setSelectedOrder,
     currentUser,
@@ -135,7 +136,7 @@ export const UserDashboardView: React.FC = () => {
                   <PetPhoto src={mainPhotoOf(p)} alt={p.breed} className="w-10 h-10 rounded-lg object-cover shrink-0" />
                   <div>
                     <h5 className="font-bold text-on-surface">{p.breed}</h5>
-                    <p className="text-on-surface-variant">${p.priceUSD.toLocaleString()}</p>
+                    <p className="text-on-surface-variant">{formatPrice(p.priceUSD)}</p>
                   </div>
                 </div>
               ))}
