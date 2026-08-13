@@ -45,7 +45,7 @@ export const ContactView: React.FC = () => {
             </a>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4">
+          <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-4">
             <h3 className="font-serif-display font-bold text-xl text-on-surface">Concierge Headquarters</h3>
 
             <div className="space-y-3 text-xs text-on-surface-variant">
@@ -65,7 +65,7 @@ export const ContactView: React.FC = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-7 p-8 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4">
+        <div className="lg:col-span-7 p-8 rounded-3xl liquid-glass liquid-glass-strong space-y-4">
           <h3 className="font-serif-display font-bold text-2xl text-on-surface">Send Us a Direct Message</h3>
 
           {submitted ? (

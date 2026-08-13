@@ -18,7 +18,7 @@ export const BreedersView: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {breeders.map(b => (
-          <div key={b.id} className="p-8 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm flex flex-col justify-between">
+          <div key={b.id} className="p-8 rounded-3xl liquid-glass liquid-glass-strong space-y-4 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <Avatar src={b.photo} name={b.name} className="w-20 h-20 rounded-full object-cover border-2 border-emerald-500 shadow-sm shrink-0" />

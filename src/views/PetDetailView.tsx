@@ -99,7 +99,7 @@ export const PetDetailView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Left Column: Gallery (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="relative aspect-square w-full rounded-3xl overflow-hidden bg-white dark:bg-[#1f2226] border border-outline-variant/30 shadow-lg">
+          <div className="relative aspect-square w-full rounded-3xl overflow-hidden liquid-glass liquid-glass-strong">
             <PetPhoto
               src={gallery[activeImageIdx]}
               alt={pet.breed}
@@ -196,7 +196,7 @@ export const PetDetailView: React.FC = () => {
               Customize Companion Package
             </h4>
 
-            <label className="flex items-center justify-between p-3.5 rounded-2xl border border-outline-variant/40 bg-white dark:bg-[#1f2226] cursor-pointer text-xs">
+            <label className="flex items-center justify-between p-3.5 rounded-2xl border border-outline-variant/40 liquid-glass liquid-glass-strong cursor-pointer text-xs">
               <div className="flex items-center gap-2.5">
                 <input
                   type="checkbox"
@@ -212,7 +212,7 @@ export const PetDetailView: React.FC = () => {
               <span className="font-bold text-[#002045] dark:text-emerald-400">+{formatPrice(ADDON_PRICES_USD.insurance)}</span>
             </label>
 
-            <label className="flex items-center justify-between p-3.5 rounded-2xl border border-outline-variant/40 bg-white dark:bg-[#1f2226] cursor-pointer text-xs">
+            <label className="flex items-center justify-between p-3.5 rounded-2xl border border-outline-variant/40 liquid-glass liquid-glass-strong cursor-pointer text-xs">
               <div className="flex items-center gap-2.5">
                 <input
                   type="checkbox"
@@ -228,7 +228,7 @@ export const PetDetailView: React.FC = () => {
               <span className="font-bold text-[#002045] dark:text-emerald-400">+{formatPrice(ADDON_PRICES_USD.starterKit)}</span>
             </label>
 
-            <label className="flex items-center justify-between p-3.5 rounded-2xl border border-outline-variant/40 bg-white dark:bg-[#1f2226] cursor-pointer text-xs">
+            <label className="flex items-center justify-between p-3.5 rounded-2xl border border-outline-variant/40 liquid-glass liquid-glass-strong cursor-pointer text-xs">
               <div className="flex items-center gap-2.5">
                 <input
                   type="checkbox"
@@ -296,7 +296,7 @@ export const PetDetailView: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-2 shadow-sm">
+          <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-2">
             <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 w-fit text-emerald-600">
               <Stethoscope className="w-6 h-6" />
             </div>
@@ -305,7 +305,7 @@ export const PetDetailView: React.FC = () => {
             <p className="text-[11px] text-on-surface-variant">Last vet exam: {pet.medicalInfo.lastVetCheckDate}</p>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-2 shadow-sm">
+          <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-2">
             <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 w-fit text-emerald-600">
               <ShieldCheck className="w-6 h-6" />
             </div>
@@ -314,7 +314,7 @@ export const PetDetailView: React.FC = () => {
             <p className="text-[11px] text-on-surface-variant">ISO Microchip ID Recorded</p>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-2 shadow-sm">
+          <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-2">
             <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 w-fit text-emerald-600">
               <FileText className="w-6 h-6" />
             </div>
@@ -323,7 +323,7 @@ export const PetDetailView: React.FC = () => {
             <p className="text-[11px] text-on-surface-variant">AKC/TICA Pedigree Cert Included</p>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-2 shadow-sm">
+          <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-2">
             <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 w-fit text-emerald-600">
               <Award className="w-6 h-6" />
             </div>
@@ -373,7 +373,7 @@ export const PetDetailView: React.FC = () => {
       {/* Breed Information & Master Breeder Card Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left: Breed Characteristics */}
-        <div className="lg:col-span-8 p-8 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-6">
+        <div className="lg:col-span-8 p-8 rounded-3xl liquid-glass liquid-glass-strong space-y-6">
           <h3 className="font-serif-display font-bold text-2xl text-on-surface">About {pet.breed} Breed</h3>
           <p className="text-xs text-on-surface-variant leading-relaxed">{pet.breedDetails.history}</p>
 
@@ -472,7 +472,7 @@ export const PetDetailView: React.FC = () => {
                 setSelectedPetId(otherPet.id);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="p-4 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 shadow-sm hover:shadow-md transition-all cursor-pointer group space-y-3"
+ className="p-4 rounded-3xl liquid-glass liquid-glass-strong hover:transition-all cursor-pointer group space-y-3"
             >
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-surface-low dark:bg-surface-high">
                 <PetPhoto

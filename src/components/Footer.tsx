@@ -39,7 +39,7 @@ export const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="w-full bg-white dark:bg-[#1a1c1e] text-on-surface border-t border-outline-variant/30 transition-colors">
+    <footer className="liquid-glass liquid-glass-strong relative z-10 w-full text-on-surface border-x-0 border-b-0 rounded-none">
       <div className="max-w-[1280px] mx-auto px-4 md:px-8 pt-16 pb-20 md:pb-12">
         {/* Top Footer Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-outline-variant/30">

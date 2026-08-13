@@ -4,13 +4,35 @@
 /* Fonts are loaded with <link rel="preconnect"> in index.html so they start
    downloading immediately instead of waiting for this stylesheet. */
 
+/* The pointer-tracked specular highlight position. Registered so the browser
+   knows these are percentages and can interpolate them instead of snapping. */
+@property --gx {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%;
+}
+
+@property --gy {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
 @layer base {
   :root {
-    /* Motion. Short, flat easing — nothing bounces or overshoots. */
+    /* Motion. Short, flat easing for utility; liquid easing for glass. */
     --ease: cubic-bezier(0.2, 0, 0, 1);
     --dur-fast: 150ms;
     --dur: 220ms;
     --dur-slow: 300ms;
+
+    /* Liquid motion. The long tail is what makes glass feel like it settles
+       rather than stops. --ease-spring overshoots very slightly; it is only
+       used where a surface is meant to feel physical. */
+    --ease-liquid: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+    --dur-liquid: 420ms;
+    --dur-liquid-slow: 620ms;
 
     --color-primary: #002045;
     --color-primary-container: #1a365d;
@@ -29,6 +51,37 @@
     --color-on-surface-variant: #43474e;
     --color-outline: #74777f;
     --color-outline-variant: #c4c6cf;
+
+    /* ---- Liquid glass material -------------------------------------------
+       A glass surface is four things stacked: a blurred, saturated sample of
+       whatever sits behind it; a translucent tint so text stays readable; a
+       bright rim along the top edge where light catches; and a soft shadow
+       that lifts it off the page. */
+    --glass-blur: 20px;
+    --glass-blur-strong: 34px;
+    --glass-saturate: 180%;
+
+    --glass-tint: rgba(255, 255, 255, 0.55);
+    --glass-tint-strong: rgba(255, 255, 255, 0.74);
+    --glass-tint-soft: rgba(255, 255, 255, 0.34);
+
+    --glass-border: rgba(255, 255, 255, 0.65);
+    --glass-rim: rgba(255, 255, 255, 0.9);
+    --glass-rim-low: rgba(255, 255, 255, 0.28);
+    --glass-specular: rgba(255, 255, 255, 0.7);
+    --glass-sheen: rgba(255, 255, 255, 0.55);
+
+    --glass-nested: rgba(249, 249, 249, 0.97);
+    --scrim: rgba(4, 12, 26, 0.5);
+
+    --glass-shadow: 0 8px 32px rgba(0, 32, 69, 0.09), 0 2px 8px rgba(0, 32, 69, 0.05);
+    --glass-shadow-lifted: 0 22px 52px rgba(0, 32, 69, 0.16), 0 6px 16px rgba(0, 32, 69, 0.08);
+
+    /* Ambient colour wash behind the page. */
+    --aurora-1: rgba(0, 109, 60, 0.28);
+    --aurora-2: rgba(0, 32, 69, 0.22);
+    --aurora-3: rgba(212, 175, 55, 0.20);
+    --aurora-opacity: 0.55;
   }
 
   .dark {
@@ -49,6 +102,31 @@
     --color-on-surface-variant: #c4c6cf;
     --color-outline: #8e9199;
     --color-outline-variant: #43474e;
+
+    /* Dark glass keeps the same structure but the rim carries most of the
+       readability — the tint alone is nearly invisible against a dark page. */
+    --glass-tint: rgba(38, 42, 48, 0.58);
+    --glass-tint-strong: rgba(31, 34, 38, 0.80);
+    /* Kept fairly opaque: the soft tint is used for chips laid over photos,
+       and light text on a bright photo needs something to sit on. */
+    --glass-tint-soft: rgba(18, 20, 23, 0.62);
+
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-rim: rgba(255, 255, 255, 0.22);
+    --glass-rim-low: rgba(255, 255, 255, 0.05);
+    --glass-specular: rgba(255, 255, 255, 0.16);
+    --glass-sheen: rgba(255, 255, 255, 0.14);
+
+    --glass-nested: rgba(26, 28, 30, 0.97);
+    --scrim: rgba(0, 0, 0, 0.62);
+
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.44), 0 2px 8px rgba(0, 0, 0, 0.3);
+    --glass-shadow-lifted: 0 22px 52px rgba(0, 0, 0, 0.55), 0 6px 16px rgba(0, 0, 0, 0.35);
+
+    --aurora-1: rgba(0, 149, 82, 0.26);
+    --aurora-2: rgba(46, 92, 168, 0.24);
+    --aurora-3: rgba(212, 175, 55, 0.14);
+    --aurora-opacity: 0.5;
   }
 
   body {
@@ -63,291 +141,1006 @@
   }
 }
 
-/* Custom luxury gradients and card elevations */
-.gold-gradient {
-  background: linear-gradient(135deg, #f3e5ab 0%, #d4af37 100%);
-}
+/* Everything below is the app's own component styling, and it lives in
+   Tailwind's `components` layer on purpose.
 
-.gold-badge {
-  background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-  border: 1px solid #d4af37;
-  color: #574500;
-}
-
-.card-elevation {
-  box-shadow: 0 4px 20px rgba(0, 32, 69, 0.05);
-  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
-}
-
-.card-elevation:hover {
-  box-shadow: 0 12px 36px rgba(0, 32, 69, 0.12);
-  transform: translateY(-4px);
-}
-
-.card-elevation:active {
-  transform: translateY(-1px);
-  transition-duration: var(--dur-fast);
-}
-
-.glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-}
-
-.dark .glass-panel {
-  background: rgba(26, 28, 30, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Custom scrollbars */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c4c6cf;
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #74777f;
-}
-
-/* Smooth page transitions for tabbed navigation */
-.page-transition {
-  animation: page-enter var(--dur-slow) var(--ease) both;
-  transform-origin: top center;
-}
-
-@keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 10px, 0);
+   Unlayered CSS outranks every layered rule, so an unlayered `.liquid-glass`
+   would beat `fixed`, `absolute`, `rounded-*` and every other utility on the
+   same element — a glass header would stop being pinned, a glass wishlist
+   button would fall back into the flow. Declaring the layer puts these rules
+   *below* the utilities, which is the order the markup assumes: the class
+   supplies the material, the utilities place and shape it. The one thing that
+   cannot come from a utility is the glass tint itself, since a `bg-*` would
+   then win over it — those tints are the `.liquid-tint-*` classes here. */
+@layer components {
+  /* Custom luxury gradients and card elevations */
+  .gold-gradient {
+    background: linear-gradient(135deg, #f3e5ab 0%, #d4af37 100%);
   }
-  to {
+
+  .gold-badge {
+    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    border: 1px solid #d4af37;
+    color: #574500;
+  }
+
+  .card-elevation {
+    box-shadow: 0 4px 20px rgba(0, 32, 69, 0.05);
+    transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+
+  .card-elevation:hover {
+    box-shadow: 0 12px 36px rgba(0, 32, 69, 0.12);
+    transform: translateY(-4px);
+  }
+
+  .card-elevation:active {
+    transform: translateY(-1px);
+    transition-duration: var(--dur-fast);
+  }
+
+  /* ---------------------------------------------------------------------------
+     Liquid glass: the material itself
+
+     `.liquid-glass` is the base. Everything else in this section is that base
+     plus a shape, a size of blur, or a way of reacting to the pointer. Apply it
+     to an element that owns its own border-radius — the pseudo-elements inherit
+     the radius so the rim and the sheen follow whatever shape you give it.
+     --------------------------------------------------------------------------- */
+
+  .liquid-glass {
+    position: relative;
+    isolation: isolate;
+    background: var(--glass-tint);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      var(--glass-shadow),
+      inset 0 1px 0 var(--glass-rim),
+      inset 0 -1px 0 var(--glass-rim-low);
+    transition:
+      background-color var(--dur-liquid) var(--ease-liquid),
+      box-shadow var(--dur-liquid) var(--ease-liquid),
+      border-color var(--dur-liquid) var(--ease-liquid),
+      transform var(--dur-liquid) var(--ease-liquid),
+      backdrop-filter var(--dur-liquid) var(--ease-liquid);
+  }
+
+  /* The specular blob. It sits under the content and tracks the pointer, so the
+     surface looks like it is catching a light source rather than glowing. */
+  .liquid-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      220px circle at var(--gx) var(--gy),
+      var(--glass-specular),
+      transparent 62%
+    );
+    opacity: 0;
+    transition: opacity var(--dur-liquid) var(--ease-liquid);
+  }
+
+  .liquid-glass:hover::before,
+  .liquid-glass:focus-within::before {
     opacity: 1;
+  }
+
+  /* Heavier frost, for panels that must hold long-form text over busy content. */
+  .liquid-glass-strong {
+    background: var(--glass-tint-strong);
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  }
+
+  /* Barely-there glass, for chips and badges laid over photography. */
+  .liquid-glass-soft {
+    background: var(--glass-tint-soft);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    backdrop-filter: blur(12px) saturate(160%);
+  }
+
+  /* Glass nested inside other glass.
+
+     An element with backdrop-filter becomes a backdrop root for everything
+     inside it, so a panel within the header can only sample what the header
+     itself paints — which is nothing. Its blur is silently a no-op and the
+     tint alone decides legibility. These surfaces therefore drop the blur and
+     carry a nearly opaque tint instead of pretending to frost. */
+  .liquid-glass-nested {
+    background: var(--glass-nested);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  /* For glass sitting on an already-dark surface (the hero, the review band),
+     where the page-level light tint would read as a grey smear. */
+  .liquid-glass-onDark {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.18);
+    --glass-specular: rgba(255, 255, 255, 0.22);
+    --glass-sheen: rgba(255, 255, 255, 0.22);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .liquid-glass-onDark:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Coloured glass. A tint replaces the neutral one and brings its own rim, so
+     an active or primary control still reads as the same material rather than a
+     flat button that happens to sit nearby.
+
+     These live here rather than as Tailwind `bg-*` utilities in the markup
+     because this file is unlayered and therefore outranks Tailwind's utility
+     layer — a `bg-` class on a `.liquid-glass` element would simply lose. */
+  .liquid-tint-primary {
+    background: linear-gradient(135deg, rgba(0, 32, 69, 0.92), rgba(26, 54, 93, 0.86));
+    border-color: rgba(255, 255, 255, 0.22);
+    --glass-specular: rgba(255, 255, 255, 0.3);
+    --glass-sheen: rgba(255, 255, 255, 0.3);
+    box-shadow:
+      0 8px 26px rgba(0, 32, 69, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.26),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .liquid-tint-primary:hover {
+    background: linear-gradient(135deg, rgba(26, 54, 93, 0.95), rgba(0, 32, 69, 0.9));
+  }
+
+  /* Solid enough for white text; still glass at the edges. */
+  .liquid-tint-secondary {
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.92), rgba(4, 120, 87, 0.88));
+    border-color: rgba(255, 255, 255, 0.24);
+    --glass-specular: rgba(255, 255, 255, 0.32);
+    --glass-sheen: rgba(255, 255, 255, 0.34);
+    box-shadow:
+      0 8px 26px rgba(4, 120, 87, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .liquid-tint-secondary:hover {
+    background: linear-gradient(135deg, rgba(4, 120, 87, 0.95), rgba(5, 150, 105, 0.9));
+  }
+
+  /* Bright glass, for a primary action sitting on a dark panel. */
+  .liquid-tint-light {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(255, 255, 255, 0.7);
+    --glass-specular: rgba(255, 255, 255, 0.9);
+    --glass-sheen: rgba(0, 32, 69, 0.10);
+    box-shadow:
+      0 8px 26px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  }
+
+  .liquid-tint-light:hover {
+    background: rgba(255, 255, 255, 1);
+  }
+
+  .liquid-tint-emerald {
+    background: rgba(16, 185, 129, 0.16);
+    border-color: rgba(16, 185, 129, 0.42);
+    --glass-specular: rgba(167, 243, 208, 0.45);
+  }
+
+  .liquid-tint-emerald:hover {
+    background: rgba(16, 185, 129, 0.26);
+  }
+
+  .liquid-tint-rose {
+    background: rgba(244, 63, 94, 0.14);
+    border-color: rgba(244, 63, 94, 0.4);
+    --glass-specular: rgba(254, 205, 211, 0.45);
+  }
+
+  .liquid-tint-rose:hover {
+    background: rgba(244, 63, 94, 0.22);
+  }
+
+  .liquid-tint-rose-solid {
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.95), rgba(225, 29, 72, 0.9));
+    border-color: rgba(255, 255, 255, 0.28);
+    --glass-specular: rgba(255, 255, 255, 0.3);
+    box-shadow:
+      0 8px 22px rgba(225, 29, 72, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  /* The heart swells once when it is filled — the only celebratory beat in the
+     interface, and it only fires on the state change. */
+  .liquid-pop-heart {
+    animation: heart-pop 460ms var(--ease-spring);
+  }
+
+  @keyframes heart-pop {
+    0% { transform: scale(1); }
+    38% { transform: scale(1.28); }
+    100% { transform: scale(1); }
+  }
+
+  .liquid-tint-amber {
+    background: rgba(217, 165, 32, 0.16);
+    border-color: rgba(217, 165, 32, 0.45);
+    --glass-specular: rgba(253, 230, 138, 0.5);
+  }
+
+  .liquid-tint-amber:hover {
+    background: rgba(217, 165, 32, 0.26);
+  }
+
+  /* Where backdrop-filter is unavailable the tint has to carry the whole job,
+     otherwise the text sits on near-transparent nothing. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .liquid-glass {
+      background: var(--color-surface-lowest);
+    }
+
+    .liquid-glass-onDark {
+      background: rgba(0, 20, 40, 0.72);
+    }
+  }
+
+  /* ---------------------------------------------------------------------------
+     Liquid glass: behaviours
+     --------------------------------------------------------------------------- */
+
+  /* A light sweep that crosses the surface on hover, like a reflection passing
+     over glass. Needs a clipping container, so only put it on shapes that can
+     afford `overflow: hidden`. */
+  .liquid-sheen {
+    overflow: hidden;
+  }
+
+  .liquid-sheen::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -60%;
+    width: 45%;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      var(--glass-sheen) 50%,
+      transparent 100%
+    );
+    transform: skewX(-18deg);
+    opacity: 0;
+  }
+
+  .liquid-sheen:hover::after,
+  .liquid-sheen:focus-visible::after {
+    animation: liquid-sweep var(--dur-liquid-slow) var(--ease-liquid);
+  }
+
+  @keyframes liquid-sweep {
+    0% {
+      left: -60%;
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      left: 130%;
+      opacity: 0;
+    }
+  }
+
+  /* Rises and brightens under the pointer, settles back with the same easing.
+     Carries its own transition so it also works on a plain element that is not
+     itself glass — a photo tile, say. */
+  .liquid-lift {
+    will-change: transform;
+    transition:
+      transform var(--dur-liquid) var(--ease-liquid),
+      box-shadow var(--dur-liquid) var(--ease-liquid),
+      background-color var(--dur-liquid) var(--ease-liquid),
+      border-color var(--dur-liquid) var(--ease-liquid);
+  }
+
+  .liquid-lift:hover {
+    transform: translate3d(0, -5px, 0);
+    box-shadow:
+      var(--glass-shadow-lifted),
+      inset 0 1px 0 var(--glass-rim),
+      inset 0 -1px 0 var(--glass-rim-low);
+  }
+
+  .liquid-lift:active {
+    transform: translate3d(0, -1px, 0) scale(0.995);
+    transition-duration: var(--dur-fast);
+  }
+
+  /* Pills and buttons: a touch of squash on press is what sells "physical". */
+  .liquid-pill {
+    border-radius: 9999px;
+  }
+
+  .liquid-pill:hover {
+    transform: translate3d(0, -1px, 0);
+  }
+
+  .liquid-pill:active {
+    transform: scale(0.95);
+    transition-duration: var(--dur-fast);
+  }
+
+  /* Slow, continuous drift for decorative surfaces. */
+  .liquid-float {
+    animation: liquid-float 7s var(--ease-liquid) infinite;
+  }
+
+  @keyframes liquid-float {
+    0%, 100% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(0, -8px, 0);
+    }
+  }
+
+  /* A slow hue drift across a glass surface — used sparingly, on hero chrome. */
+  .liquid-shimmer::before {
+    opacity: 0.6;
+    animation: liquid-shimmer 9s ease-in-out infinite;
+  }
+
+  @keyframes liquid-shimmer {
+    0%, 100% {
+      --gx: 15%;
+      --gy: 0%;
+    }
+    50% {
+      --gx: 85%;
+      --gy: 40%;
+    }
+  }
+
+  /* The search field unfurls from the circular button it replaces. Animating the
+     width rather than a transform keeps the icon and clear button where the
+     layout puts them instead of stretching them. */
+  .liquid-search {
+    animation: search-unfurl var(--dur-liquid) var(--ease-liquid) backwards;
+    transform-origin: right center;
+  }
+
+  .liquid-search:focus-within {
+    border-color: color-mix(in srgb, var(--color-secondary) 55%, transparent);
+    box-shadow:
+      var(--glass-shadow),
+      inset 0 1px 0 var(--glass-rim),
+      0 0 0 3px color-mix(in srgb, var(--color-secondary) 16%, transparent);
+  }
+
+  @keyframes search-unfurl {
+    from {
+      opacity: 0;
+      transform: scaleX(0.42);
+    }
+    to {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+  }
+
+  /* Bars pinned to an edge only need three borders and a rim on the inner one,
+     otherwise they read as a floating slab with a seam against the viewport. */
+  .liquid-header {
+    border-width: 0 0 1px 0;
+    border-radius: 0;
+    box-shadow:
+      0 6px 24px rgba(0, 32, 69, 0.07),
+      inset 0 -1px 0 var(--glass-rim-low);
+  }
+
+  .dark .liquid-header {
+    box-shadow:
+      0 6px 24px rgba(0, 0, 0, 0.4),
+      inset 0 -1px 0 var(--glass-rim-low);
+  }
+
+  /* A dock item's highlight is a capsule that springs open behind the icon, and
+     the icon itself rises a little to meet it. */
+  .liquid-dock-item {
+    position: relative;
+    isolation: isolate;
+    transition: color var(--dur) var(--ease), transform var(--dur-liquid) var(--ease-spring);
+  }
+
+  .liquid-dock-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 0.75rem;
+    background: var(--glass-tint);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-rim);
+    opacity: 0;
+    transform: scale(0.7);
+    transition:
+      opacity var(--dur-liquid) var(--ease-liquid),
+      transform var(--dur-liquid) var(--ease-spring);
+  }
+
+  .liquid-dock-item.is-active::before {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .liquid-dock-item.is-active {
+    transform: translate3d(0, -2px, 0);
+  }
+
+  .liquid-dock {
+    border-width: 1px 0 0 0;
+    border-radius: 0;
+    box-shadow:
+      0 -6px 24px rgba(0, 32, 69, 0.08),
+      inset 0 1px 0 var(--glass-rim);
+  }
+
+  .dark .liquid-dock {
+    box-shadow:
+      0 -6px 24px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 var(--glass-rim);
+  }
+
+  /* ---------------------------------------------------------------------------
+     Ambient background
+
+     Three soft colour fields drifting behind everything. They are what the glass
+     samples, so without them the whole material has nothing to refract and the
+     page just looks slightly foggy.
+     --------------------------------------------------------------------------- */
+
+  .liquid-aurora {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: var(--aurora-opacity);
+    transition: opacity var(--dur-liquid-slow) var(--ease-liquid);
+  }
+
+  .liquid-aurora span {
+    position: absolute;
+    display: block;
+    border-radius: 50%;
+    filter: blur(80px);
+    will-change: transform;
+  }
+
+  .liquid-aurora span:nth-child(1) {
+    top: -12%;
+    left: -8%;
+    width: 46vw;
+    height: 46vw;
+    background: var(--aurora-1);
+    animation: aurora-drift-a 26s ease-in-out infinite;
+  }
+
+  .liquid-aurora span:nth-child(2) {
+    top: 28%;
+    right: -14%;
+    width: 52vw;
+    height: 52vw;
+    background: var(--aurora-2);
+    animation: aurora-drift-b 32s ease-in-out infinite;
+  }
+
+  .liquid-aurora span:nth-child(3) {
+    bottom: -18%;
+    left: 24%;
+    width: 40vw;
+    height: 40vw;
+    background: var(--aurora-3);
+    animation: aurora-drift-c 38s ease-in-out infinite;
+  }
+
+  @keyframes aurora-drift-a {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    33% { transform: translate3d(8vw, 6vh, 0) scale(1.12); }
+    66% { transform: translate3d(-4vw, 12vh, 0) scale(0.94); }
+  }
+
+  @keyframes aurora-drift-b {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    40% { transform: translate3d(-10vw, -8vh, 0) scale(1.08); }
+    75% { transform: translate3d(-3vw, 8vh, 0) scale(0.92); }
+  }
+
+  @keyframes aurora-drift-c {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(10vw, -10vh, 0) scale(1.15); }
+  }
+
+  /* Legacy alias — earlier markup used .glass-panel and it should keep working. */
+  .glass-panel {
+    background: var(--glass-tint-strong);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+  }
+
+  /* Custom scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(116, 119, 127, 0.35);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background-color var(--dur) var(--ease);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(116, 119, 127, 0.65);
+    background-clip: content-box;
+  }
+
+  /* Smooth page transitions for tabbed navigation */
+  .page-transition {
+    animation: page-enter var(--dur-liquid-slow) var(--ease-liquid) backwards;
+    transform-origin: top center;
+  }
+
+  /* Views arrive slightly out of focus and resolve — the same way the glass
+     panels do — so switching tabs reads as one continuous material.
+
+     Every entry animation here lands on `filter: none`, never `filter: blur(0)`.
+     The two look identical, but any filter value at all — including a zero one
+     — makes the element a backdrop root, which permanently stops the glass
+     inside it from sampling the page. Since this animation wraps every view,
+     `blur(0)` would flatten the entire interface once the animation settled. */
+  @keyframes page-enter {
+    from {
+      opacity: 0;
+      filter: blur(8px);
+      transform: translate3d(0, 14px, 0) scale(0.99);
+    }
+    to {
+      opacity: 1;
+      filter: none;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  /* Used across every view — it was referenced before it existed, so nothing
+     actually faded in. */
+  .animate-fade-in {
+    animation: fade-in var(--dur-liquid) var(--ease-liquid) backwards;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 8px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  /* Cards in a grid arrive in a gentle cascade rather than all at once. */
+  .stagger-children > * {
+    animation: liquid-rise var(--dur-liquid-slow) var(--ease-liquid) backwards;
+  }
+
+  @keyframes liquid-rise {
+    from {
+      opacity: 0;
+      filter: blur(6px);
+      transform: translate3d(0, 20px, 0) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      filter: none;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  .stagger-children > *:nth-child(1) { animation-delay: 40ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 90ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 140ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 190ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 290ms; }
+  .stagger-children > *:nth-child(7) { animation-delay: 340ms; }
+  .stagger-children > *:nth-child(8) { animation-delay: 390ms; }
+  .stagger-children > *:nth-child(n + 9) { animation-delay: 440ms; }
+
+  /* ---------------------------------------------------------------------------
+     Scroll reveal
+
+     Sections start settled-but-hidden and resolve as they enter the viewport.
+     The `is-visible` class is added by useScrollReveal; if the observer never
+     runs (no JS, old browser) the fallback below leaves everything visible.
+     --------------------------------------------------------------------------- */
+
+  .reveal {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translate3d(0, 28px, 0);
+    transition:
+      opacity var(--dur-liquid-slow) var(--ease-liquid),
+      filter var(--dur-liquid-slow) var(--ease-liquid),
+      transform var(--dur-liquid-slow) var(--ease-liquid);
+    will-change: opacity, transform;
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    filter: none;
     transform: translate3d(0, 0, 0);
   }
-}
 
-/* Used across every view — it was referenced before it existed, so nothing
-   actually faded in. */
-.animate-fade-in {
-  animation: fade-in var(--dur) var(--ease) both;
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0);
-  }
-  to {
+  html:not(.js-reveal-ready) .reveal {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    filter: none;
+    transform: none;
   }
-}
 
-/* Cards in a grid arrive in a gentle cascade rather than all at once. */
-.stagger-children > * {
-  animation: fade-in var(--dur) var(--ease) both;
-}
-
-.stagger-children > *:nth-child(1) { animation-delay: 30ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 90ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 150ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 180ms; }
-.stagger-children > *:nth-child(7) { animation-delay: 210ms; }
-.stagger-children > *:nth-child(8) { animation-delay: 240ms; }
-.stagger-children > *:nth-child(n + 9) { animation-delay: 270ms; }
-
-/* Consistent, quiet focus ring for keyboard users on every control. */
-:where(a, button, input, select, textarea):focus-visible {
-  outline: 2px solid var(--color-secondary);
-  outline-offset: 2px;
-  border-radius: 0.5rem;
-}
-
-/* Images fade in as they decode instead of popping. */
-img {
-  transition: opacity 300ms ease;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-/* ---------------------------------------------------------------------------
-   Interaction: hover and press
-   --------------------------------------------------------------------------- */
-
-/* Everything clickable settles into its new state rather than snapping. */
-button,
-a,
-[role="button"],
-summary {
-  transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
-    color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease),
-    opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
-}
-
-/* A small give on press, so a tap feels answered. Skipped for disabled
-   controls and for anything that manages its own transform. */
-button:not(:disabled):not(.no-press):active,
-[role="button"]:not(.no-press):active {
-  transform: scale(0.97);
-}
-
-/* Nav items grow an underline from the centre on hover. */
-.nav-link {
-  position: relative;
-}
-
-.nav-link::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -4px;
-  height: 2px;
-  border-radius: 2px;
-  background: currentColor;
-  transform: scaleX(0);
-  transition: transform var(--dur) var(--ease);
-}
-
-.nav-link:hover::after,
-.nav-link:focus-visible::after {
-  transform: scaleX(1);
-}
-
-/* ---------------------------------------------------------------------------
-   Modals and drawers
-   --------------------------------------------------------------------------- */
-
-.modal-backdrop {
-  animation: backdrop-in var(--dur) var(--ease) both;
-}
-
-.modal-panel {
-  animation: panel-in var(--dur-slow) var(--ease) both;
-}
-
-/* Drawers arrive from the edge they are anchored to. */
-.drawer-panel {
-  animation: drawer-in var(--dur-slow) var(--ease) both;
-}
-
-/* Set by useModalTransition while the close animation plays. */
-.modal-backdrop.is-closing {
-  animation: backdrop-in var(--dur-fast) var(--ease) reverse both;
-}
-
-.modal-panel.is-closing,
-.drawer-panel.is-closing {
-  animation: panel-in var(--dur-fast) var(--ease) reverse both;
-}
-
-@keyframes backdrop-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes panel-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0) scale(0.98);
+  /* Consistent, quiet focus ring for keyboard users on every control. */
+  :where(a, button, input, select, textarea):focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
   }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+
+  /* Images fade in as they decode instead of popping. */
+  img {
+    transition: opacity 300ms ease;
   }
-}
 
-@keyframes drawer-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 12px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-/* ---------------------------------------------------------------------------
-   Loading placeholders
-   --------------------------------------------------------------------------- */
-
-.skeleton {
-  position: relative;
-  overflow: hidden;
-  background: var(--color-surface-low);
-  border-radius: 0.75rem;
-}
-
-.skeleton::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
-  animation: shimmer 1.1s infinite;
-}
-
-.dark .skeleton::after {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
-}
-
-@keyframes shimmer {
-  to { transform: translateX(100%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
   html {
-    scroll-behavior: auto;
+    scroll-behavior: smooth;
   }
 
-  .page-transition,
-  .animate-fade-in,
-  .stagger-children > *,
-  .modal-backdrop,
-  .modal-panel,
-  .drawer-panel,
-  .modal-backdrop.is-closing,
-  .modal-panel.is-closing,
-  .drawer-panel.is-closing {
-    animation: none;
-  }
+  /* ---------------------------------------------------------------------------
+     Interaction: hover and press
+     --------------------------------------------------------------------------- */
 
-  .skeleton::after {
-    animation: none;
-  }
-
+  /* Everything clickable settles into its new state rather than snapping. */
   button,
   a,
   [role="button"],
-  summary,
+  summary {
+    transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
+      color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease),
+      opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  }
+
+  /* A small give on press, so a tap feels answered. Skipped for disabled
+     controls and for anything that manages its own transform. */
+  button:not(:disabled):not(.no-press):active,
+  [role="button"]:not(.no-press):active {
+    transform: scale(0.97);
+  }
+
+  /* Nav items grow an underline from the centre on hover. */
+  .nav-link {
+    position: relative;
+  }
+
   .nav-link::after {
-    transition: none;
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -4px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transform: scaleX(0);
+    transition: transform var(--dur-liquid) var(--ease-liquid);
   }
 
-  button:not(:disabled):active,
-  [role="button"]:active {
-    transform: none;
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after {
+    transform: scaleX(1);
   }
 
-  .card-elevation,
-  .card-elevation:hover {
-    transform: none;
-    transition: none;
+  /* The active tab's glass capsule. It scales up from the centre when the tab
+     becomes current, so the highlight looks like it flows between items. */
+  .liquid-tab {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .liquid-tab::before {
+    content: '';
+    position: absolute;
+    inset: -0.35rem -0.7rem;
+    z-index: -1;
+    border-radius: 9999px;
+    background: var(--glass-tint);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 var(--glass-rim);
+    opacity: 0;
+    transform: scale(0.82);
+    transition:
+      opacity var(--dur-liquid) var(--ease-liquid),
+      transform var(--dur-liquid) var(--ease-spring);
+  }
+
+  .liquid-tab.is-active::before {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* ---------------------------------------------------------------------------
+     Modals and drawers
+
+     The backdrop frosts the page rather than dimming it, and the panel resolves
+     out of that frost — one material, two states.
+     --------------------------------------------------------------------------- */
+
+  /* The scrim fades in via background-color rather than opacity on purpose.
+
+     An ancestor with opacity below 1 is a backdrop root, and a backdrop root
+     stops its descendants from sampling anything outside it — so an opacity
+     fade here would silently disable the panel's own blur for the length of
+     the animation. Fading the colour keeps the backdrop's opacity at 1
+     throughout, and the panel stays real glass over the dimmed page. */
+  .modal-backdrop {
+    background-color: var(--scrim);
+    animation: backdrop-in var(--dur-liquid) var(--ease-liquid) backwards;
+  }
+
+  .modal-panel {
+    animation: panel-in var(--dur-liquid-slow) var(--ease-liquid) backwards;
+  }
+
+  /* Drawers arrive from the edge they are anchored to. */
+  .drawer-panel {
+    animation: drawer-in var(--dur-liquid-slow) var(--ease-liquid) backwards;
+  }
+
+  /* Set by useModalTransition while the close animation plays. */
+  .modal-backdrop.is-closing {
+    animation: backdrop-in var(--dur) var(--ease-liquid) reverse both;
+  }
+
+  .modal-panel.is-closing,
+  .drawer-panel.is-closing {
+    animation: panel-in var(--dur) var(--ease-liquid) reverse both;
+  }
+
+  @keyframes backdrop-in {
+    from { background-color: transparent; }
+    to { background-color: var(--scrim); }
+  }
+
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      filter: blur(14px);
+      transform: translate3d(0, 22px, 0) scale(0.94);
+    }
+    to {
+      opacity: 1;
+      filter: none;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  @keyframes drawer-in {
+    from {
+      opacity: 0;
+      filter: blur(12px);
+      transform: translate3d(0, 28px, 0) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      filter: none;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  /* Toasts surface from below and hold as a glass capsule.
+
+     This carries its own tint rather than using a Tailwind `bg-*` utility: the
+     glass classes in this file are unlayered and so outrank Tailwind's utility
+     layer. Anything sharing an element with `.liquid-glass` has to set its
+     colour here, not in the markup. */
+  .liquid-toast {
+    background: rgba(0, 32, 69, 0.78);
+    border-color: rgba(255, 255, 255, 0.22);
+    --glass-specular: rgba(255, 255, 255, 0.24);
+    box-shadow:
+      0 18px 44px rgba(0, 32, 69, 0.32),
+      inset 0 1px 0 rgba(255, 255, 255, 0.26),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+    animation: toast-in var(--dur-liquid-slow) var(--ease-spring) backwards;
+  }
+
+  /* No horizontal offset here: the toast is centred by Tailwind's
+     `-translate-x-1/2`, which in v4 sets the standalone `translate` property.
+     That composes with `transform` rather than replacing it, so repeating the
+     -50% would shift the toast twice. */
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      filter: blur(10px);
+      transform: translate3d(0, 26px, 0) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      filter: none;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  /* Dropdowns and popovers unfold from the control that opened them. */
+  .liquid-pop {
+    animation: pop-in var(--dur-liquid) var(--ease-liquid) backwards;
+    transform-origin: top center;
+  }
+
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      filter: blur(8px);
+      transform: translate3d(0, -6px, 0) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      filter: none;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  /* The mobile sheet unrolls downward out of the header. */
+  .liquid-sheet {
+    animation: sheet-in var(--dur-liquid) var(--ease-liquid) backwards;
+    transform-origin: top center;
+  }
+
+  @keyframes sheet-in {
+    from {
+      opacity: 0;
+      filter: blur(10px);
+      transform: translate3d(0, -12px, 0) scaleY(0.96);
+    }
+    to {
+      opacity: 1;
+      filter: none;
+      transform: translate3d(0, 0, 0) scaleY(1);
+    }
+  }
+
+  /* ---------------------------------------------------------------------------
+     Loading placeholders
+     --------------------------------------------------------------------------- */
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-surface-low);
+    border-radius: 0.75rem;
+  }
+
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    animation: shimmer 1.1s infinite;
+  }
+
+  .dark .skeleton::after {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+  }
+
+  @keyframes shimmer {
+    to { transform: translateX(100%); }
+  }
+
+  /* ---------------------------------------------------------------------------
+     Reduced motion
+
+     The glass stays — it is the look of the product, not the motion. What goes
+     is everything that moves on its own or moves under the pointer.
+     --------------------------------------------------------------------------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    .page-transition,
+    .animate-fade-in,
+    .stagger-children > *,
+    .modal-backdrop,
+    .modal-panel,
+    .drawer-panel,
+    .modal-backdrop.is-closing,
+    .modal-panel.is-closing,
+    .drawer-panel.is-closing,
+    .liquid-toast,
+    .liquid-pop,
+    .liquid-sheet,
+    .liquid-search,
+    .liquid-float,
+    .liquid-pop-heart,
+    .liquid-shimmer::before,
+    .liquid-sheen:hover::after,
+    .liquid-aurora span {
+      animation: none;
+    }
+
+    /* Anything the entry keyframes would have left mid-blur has to be reset,
+       since `both` fill no longer applies once the animation is gone. */
+    .page-transition,
+    .animate-fade-in,
+    .stagger-children > *,
+    .modal-panel,
+    .drawer-panel,
+    .liquid-toast,
+    .liquid-pop,
+    .liquid-sheet,
+    .liquid-search {
+      opacity: 1;
+      filter: none;
+      transform: none;
+    }
+
+    .reveal {
+      opacity: 1;
+      filter: none;
+      transform: none;
+      transition: none;
+    }
+
+    button,
+    a,
+    [role="button"],
+    summary,
+    .nav-link::after,
+    .liquid-glass,
+    .liquid-glass::before,
+    .liquid-tab::before {
+      transition: none;
+    }
+
+    button:not(:disabled):active,
+    [role="button"]:active,
+    .liquid-pill:hover,
+    .liquid-pill:active,
+    .liquid-lift:hover,
+    .liquid-lift:active {
+      transform: none;
+    }
+
+    .card-elevation,
+    .card-elevation:hover {
+      transform: none;
+      transition: none;
+    }
   }
 }

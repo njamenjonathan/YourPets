@@ -47,7 +47,7 @@ export const CartView: React.FC = () => {
           <h1 className="font-serif-display font-bold text-3xl">Your Shopping Cart</h1>
         </div>
 
-        <div className="p-16 text-center bg-white dark:bg-[#1f2226] rounded-3xl border border-outline-variant/30 space-y-4">
+        <div className="p-16 text-center liquid-glass liquid-glass-strong rounded-3xl space-y-4">
           <ShoppingBag className="w-16 h-16 mx-auto text-outline" />
           <h3 className="font-serif-display font-bold text-2xl text-on-surface">Your Cart is Currently Empty</h3>
           <p className="text-xs text-on-surface-variant max-w-sm mx-auto">
@@ -80,7 +80,7 @@ export const CartView: React.FC = () => {
           {cart.map((item) => (
             <div
               key={item.pet.id}
-              className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 shadow-sm space-y-4"
+ className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-4"
             >
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -154,7 +154,7 @@ export const CartView: React.FC = () => {
 
         {/* Order Summary Column */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
+          <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-4">
             <h3 className="font-serif-display font-bold text-xl text-on-surface border-b border-outline-variant/30 pb-3">
               Order Summary
             </h3>

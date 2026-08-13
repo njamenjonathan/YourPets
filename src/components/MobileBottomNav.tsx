@@ -9,11 +9,11 @@ export const MobileBottomNav: React.FC = () => {
   const wishlistCount = wishlist.length;
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#1a1c1e]/95 backdrop-blur-md border-t border-outline-variant/30 px-2 py-2 flex justify-around items-center shadow-lg">
+    <nav className="liquid-glass liquid-glass-strong liquid-dock md:hidden fixed bottom-0 left-0 right-0 z-50 px-2 py-2 flex justify-around items-center">
       <button
         onClick={() => setActiveTab('home')}
-        className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-colors ${
-          activeTab === 'home' ? 'text-[#002045] dark:text-white font-bold bg-surface-low dark:bg-surface-high' : 'text-on-surface-variant'
+        className={`liquid-dock-item flex flex-col items-center justify-center p-1.5 rounded-xl ${
+          activeTab === 'home' ? 'is-active text-[#002045] dark:text-white font-bold' : 'text-on-surface-variant'
         }`}
       >
         <Home className="w-5 h-5" />
@@ -22,8 +22,8 @@ export const MobileBottomNav: React.FC = () => {
 
       <button
         onClick={() => setActiveTab('browse')}
-        className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-colors ${
-          activeTab === 'browse' ? 'text-[#002045] dark:text-white font-bold bg-surface-low dark:bg-surface-high' : 'text-on-surface-variant'
+        className={`liquid-dock-item flex flex-col items-center justify-center p-1.5 rounded-xl ${
+          activeTab === 'browse' ? 'is-active text-[#002045] dark:text-white font-bold' : 'text-on-surface-variant'
         }`}
       >
         <Compass className="w-5 h-5" />
@@ -38,8 +38,8 @@ export const MobileBottomNav: React.FC = () => {
             setActiveTab('wishlist');
           }
         }}
-        className={`relative flex flex-col items-center justify-center p-1.5 rounded-xl transition-colors ${
-          activeTab === 'wishlist' ? 'text-[#002045] dark:text-white font-bold bg-surface-low dark:bg-surface-high' : 'text-on-surface-variant'
+        className={`liquid-dock-item relative flex flex-col items-center justify-center p-1.5 rounded-xl ${
+          activeTab === 'wishlist' ? 'is-active text-[#002045] dark:text-white font-bold' : 'text-on-surface-variant'
         }`}
       >
         <Heart className="w-5 h-5" />
@@ -59,8 +59,8 @@ export const MobileBottomNav: React.FC = () => {
             setActiveTab('cart');
           }
         }}
-        className={`relative flex flex-col items-center justify-center p-1.5 rounded-xl transition-colors ${
-          activeTab === 'cart' ? 'text-[#002045] dark:text-white font-bold bg-surface-low dark:bg-surface-high' : 'text-on-surface-variant'
+        className={`liquid-dock-item relative flex flex-col items-center justify-center p-1.5 rounded-xl ${
+          activeTab === 'cart' ? 'is-active text-[#002045] dark:text-white font-bold' : 'text-on-surface-variant'
         }`}
       >
         <ShoppingBag className="w-5 h-5" />
@@ -74,8 +74,8 @@ export const MobileBottomNav: React.FC = () => {
 
       <button
         onClick={() => setActiveTab('dashboard')}
-        className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-colors ${
-          activeTab === 'dashboard' ? 'text-[#002045] dark:text-white font-bold bg-surface-low dark:bg-surface-high' : 'text-on-surface-variant'
+        className={`liquid-dock-item flex flex-col items-center justify-center p-1.5 rounded-xl ${
+          activeTab === 'dashboard' ? 'is-active text-[#002045] dark:text-white font-bold' : 'text-on-surface-variant'
         }`}
       >
         <User className="w-5 h-5" />

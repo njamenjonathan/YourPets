@@ -106,7 +106,7 @@ export const AdminDashboardView: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-widest text-amber-400">Protected Route</span>
           <h1 className="font-serif-display font-bold text-3xl md:text-4xl">Admin Access Required</h1>
         </div>
-        <div className="p-10 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 text-center space-y-4">
+        <div className="p-10 rounded-3xl liquid-glass liquid-glass-strong text-center space-y-4">
           <ShieldCheck className="w-12 h-12 mx-auto text-amber-500" />
           <p className="text-sm text-on-surface-variant">Sign in with the configured admin email to view orders and manage inventory.</p>
           <button onClick={() => setIsAuthModalOpen(true)} className="bg-[#002045] text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider">Sign In</button>
@@ -135,24 +135,24 @@ export const AdminDashboardView: React.FC = () => {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-1 shadow-sm">
+        <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-1">
           <span className="text-xs font-bold uppercase text-on-surface-variant">Active Catalog Pets</span>
           <div className="text-3xl font-serif-display font-bold text-[#002045] dark:text-emerald-400">{pets.length}</div>
         </div>
 
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-1 shadow-sm">
+        <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-1">
           <span className="text-xs font-bold uppercase text-on-surface-variant">Rare Breeds VIP</span>
           <div className="text-3xl font-serif-display font-bold text-amber-600">
             {pets.filter(p => p.breedType === 'rare').length}
           </div>
         </div>
 
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-1 shadow-sm">
+        <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-1">
           <span className="text-xs font-bold uppercase text-on-surface-variant">Vet Health Clearance</span>
           <div className="text-3xl font-serif-display font-bold text-emerald-600">100%</div>
         </div>
 
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-1 shadow-sm">
+        <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-1">
           <span className="text-xs font-bold uppercase text-on-surface-variant">Avg. Listing Value</span>
           <div className="text-3xl font-serif-display font-bold text-[#002045] dark:text-white">
             {formatPrice(
@@ -165,7 +165,7 @@ export const AdminDashboardView: React.FC = () => {
       </div>
 
 
-      <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 shadow-sm overflow-x-auto">
+      <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong overflow-x-auto">
         <h3 className="font-serif-display font-bold text-xl text-on-surface mb-4">Incoming Orders</h3>
         <table className="w-full text-left text-xs">
           <thead>
@@ -191,7 +191,7 @@ export const AdminDashboardView: React.FC = () => {
       </div>
 
       {/* Pet Inventory Table */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 shadow-sm overflow-x-auto">
+      <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong overflow-x-auto">
         <h3 className="font-serif-display font-bold text-xl text-on-surface mb-4">Master Inventory Listings</h3>
 
         <table className="w-full text-left text-xs">
@@ -254,8 +254,8 @@ export const AdminDashboardView: React.FC = () => {
 
       {/* Add Pet Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-xl bg-white dark:bg-[#1a1c1e] rounded-3xl shadow-2xl border border-outline-variant/30 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop">
+          <div className="liquid-glass liquid-glass-strong modal-panel relative w-full max-w-xl rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="font-serif-display font-bold text-2xl text-on-surface">Add New Pet Listing</h3>
 
             <form onSubmit={handleCreatePet} className="space-y-4 text-xs">

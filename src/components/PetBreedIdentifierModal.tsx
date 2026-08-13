@@ -148,8 +148,8 @@ export const PetBreedIdentifierModal: React.FC = () => {
     : [];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md modal-backdrop">
-      <div className="relative w-full max-w-3xl bg-white dark:bg-[#1a1c1e] rounded-3xl shadow-2xl border border-outline-variant/30 overflow-hidden max-h-[90vh] flex flex-col modal-panel">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop">
+      <div className="relative w-full max-w-3xl liquid-glass liquid-glass-strong rounded-3xl overflow-hidden max-h-[90vh] flex flex-col modal-panel">
         {/* Header Bar */}
         <div className="flex items-center justify-between p-5 md:p-6 border-b border-outline-variant/30 bg-gradient-to-r from-emerald-950 via-[#002045] to-emerald-900 text-white">
           <div className="flex items-center gap-3">
@@ -304,7 +304,7 @@ export const PetBreedIdentifierModal: React.FC = () => {
                       </div>
 
                       {/* Baby Pet Price Box */}
-                      <div className="bg-white dark:bg-[#1a1c1e] p-4 rounded-2xl border border-amber-500/30 shadow-sm text-left md:text-right">
+                      <div className="liquid-glass liquid-glass-nested liquid-tint-amber p-4 rounded-2xl text-left md:text-right">
                         <div className="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 dark:text-amber-400">
                           Baby Pet Market Price
                         </div>

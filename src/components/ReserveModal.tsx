@@ -79,8 +79,8 @@ export const ReserveModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm modal-backdrop">
-      <div className="relative w-full max-w-lg bg-white dark:bg-[#1a1c1e] rounded-3xl shadow-2xl border border-outline-variant/30 overflow-hidden flex flex-col modal-panel">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop">
+      <div className="relative w-full max-w-lg liquid-glass liquid-glass-strong rounded-3xl overflow-hidden flex flex-col modal-panel">
         {/* Header */}
         <div className="p-6 bg-[#002045] text-white flex justify-between items-center">
           <div>

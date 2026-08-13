@@ -120,8 +120,8 @@ export const AuthModal: React.FC = () => {
   const isRememberedActive = useRemembered && !!rememberedEmail && mode === 'login';
 
   return (
-    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md modal-backdrop ${closing ? 'is-closing' : ''}`}>
-      <div className={`bg-white dark:bg-[#1a1c1e] text-on-surface w-full max-w-md rounded-3xl shadow-2xl border border-outline-variant/30 overflow-hidden relative modal-panel ${closing ? 'is-closing' : ''}`}>
+    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop ${closing ? 'is-closing' : ''}`}>
+      <div className={`liquid-glass liquid-glass-strong text-on-surface w-full max-w-md rounded-3xl overflow-hidden relative modal-panel ${closing ? 'is-closing' : ''}`}>
         {/* Modal Header */}
         <div className="bg-[#002045] text-white p-6 relative">
           <button
@@ -183,7 +183,7 @@ export const AuthModal: React.FC = () => {
           {/* Divider */}
           <div className="relative flex items-center justify-center py-1">
             <div className="border-t border-outline-variant/40 w-full" />
-            <span className="bg-white dark:bg-[#1a1c1e] px-3 text-[10px] uppercase tracking-wider font-extrabold text-outline shrink-0">
+            <span className="px-3 text-[10px] uppercase tracking-wider font-extrabold text-outline shrink-0">
               or use email
             </span>
             <div className="border-t border-outline-variant/40 w-full" />

@@ -16,7 +16,7 @@ export const HealthGuaranteeView: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-3">
+        <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-3">
           <Stethoscope className="w-8 h-8 text-emerald-600" />
           <h3 className="font-serif-display font-bold text-xl text-on-surface">40-Point Veterinary Check</h3>
           <p className="text-xs text-on-surface-variant leading-relaxed">
@@ -24,7 +24,7 @@ export const HealthGuaranteeView: React.FC = () => {
           </p>
         </div>
 
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-3">
+        <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-3">
           <ShieldCheck className="w-8 h-8 text-emerald-600" />
           <h3 className="font-serif-display font-bold text-xl text-on-surface">Genetic Screening</h3>
           <p className="text-xs text-on-surface-variant leading-relaxed">
@@ -32,7 +32,7 @@ export const HealthGuaranteeView: React.FC = () => {
           </p>
         </div>
 
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-3">
+        <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-3">
           <Award className="w-8 h-8 text-emerald-600" />
           <h3 className="font-serif-display font-bold text-xl text-on-surface">100% Coverage & Support</h3>
           <p className="text-xs text-on-surface-variant leading-relaxed">

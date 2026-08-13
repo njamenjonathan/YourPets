@@ -12,7 +12,7 @@ export const PetCareView: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {SAMPLE_ARTICLES.map(art => (
-          <article key={art.id} className="bg-white dark:bg-[#1f2226] rounded-3xl border border-outline-variant/30 overflow-hidden shadow-sm flex flex-col justify-between">
+          <article key={art.id} className="liquid-glass liquid-glass-strong rounded-3xl overflow-hidden flex flex-col justify-between">
             <img src={art.image} alt={art.title} className="h-48 w-full object-cover" />
             <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
               <div>

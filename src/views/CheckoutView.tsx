@@ -224,7 +224,7 @@ export const CheckoutView: React.FC = () => {
       <form onSubmit={handleCompleteOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-6">
           {/* Your details */}
-          <section className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
+          <section className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-4">
             <h3 className="font-serif-display font-bold text-xl text-on-surface">Your details</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
@@ -256,7 +256,7 @@ export const CheckoutView: React.FC = () => {
           </section>
 
           {/* Destination */}
-          <section className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
+          <section className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-4">
             <h3 className="font-serif-display font-bold text-xl text-on-surface flex items-center gap-2">
               <Plane className="w-5 h-5 text-emerald-600" /> Where are we flying to?
             </h3>
@@ -294,7 +294,7 @@ export const CheckoutView: React.FC = () => {
           </section>
 
           {/* Payment preference */}
-          <section className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
+          <section className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-4">
             <div>
               <h3 className="font-serif-display font-bold text-xl text-on-surface">How would you like to pay?</h3>
               <p className="text-xs text-on-surface-variant mt-1">
@@ -328,7 +328,7 @@ export const CheckoutView: React.FC = () => {
 
         {/* Summary */}
         <div className="lg:col-span-4">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm lg:sticky lg:top-28">
+          <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-4 lg:sticky lg:top-28">
             <h3 className="font-serif-display font-bold text-xl text-on-surface">Order summary</h3>
 
             <div className="space-y-2.5 text-xs text-on-surface-variant pb-3 border-b border-outline-variant/30">
