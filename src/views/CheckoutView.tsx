@@ -4,6 +4,7 @@ import { usePetStore } from '../context/PetStoreContext';
 import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
 import { SignInRequired } from '../components/SignInRequired';
 import { sendOrderEmail } from '../lib/orderEmail';
+import { ADDON_PRICES_USD, DELIVERY_COST_USD, addOnsTotalUSD, taxesUSD } from '../lib/pricing';
 
 type PaymentMethod = 'whatsapp' | 'chime' | 'applepay' | 'wire';
 
@@ -56,17 +57,10 @@ export const CheckoutView: React.FC = () => {
   }
 
   const subtotal = cart.reduce((acc, item) => acc + item.pet.priceUSD, 0);
-  const addonsTotal = cart.reduce((acc, item) => {
-    let add = 0;
-    if (item.selectedAddOns.insurance) add += 25;
-    if (item.selectedAddOns.starterKit) add += 85;
-    if (item.selectedAddOns.vipTransport) add += 150;
-    return acc + add;
-  }, 0);
+  const addonsTotal = cart.reduce((acc, item) => acc + addOnsTotalUSD(item.selectedAddOns), 0);
 
-  // $100 within the USA, $200 for overseas destinations.
-  const deliveryCost = destinationType === 'domestic' ? 100 : 200;
-  const taxes = Math.round((subtotal + addonsTotal) * 0.08);
+  const deliveryCost = DELIVERY_COST_USD[destinationType];
+  const taxes = taxesUSD(subtotal + addonsTotal);
   const totalAmount = subtotal + addonsTotal + deliveryCost + taxes;
 
   const handleCompleteOrder = async (e: React.FormEvent) => {
@@ -96,10 +90,12 @@ export const CheckoutView: React.FC = () => {
     const methodLabel = PAYMENT_LABELS[paymentMethod];
 
     const petsDetails = cart.map(item => {
+      // The order email is always denominated in USD, whatever currency the
+      // shopper was browsing in.
       const addOnsList: string[] = [];
-      if (item.selectedAddOns.insurance) addOnsList.push('Vet health insurance ($25)');
-      if (item.selectedAddOns.starterKit) addOnsList.push('Starter kit ($85)');
-      if (item.selectedAddOns.vipTransport) addOnsList.push('Flight nanny escort ($150)');
+      if (item.selectedAddOns.insurance) addOnsList.push(`Vet health insurance ($${ADDON_PRICES_USD.insurance} USD)`);
+      if (item.selectedAddOns.starterKit) addOnsList.push(`Starter kit ($${ADDON_PRICES_USD.starterKit} USD)`);
+      if (item.selectedAddOns.vipTransport) addOnsList.push(`Flight nanny escort ($${ADDON_PRICES_USD.vipTransport} USD)`);
 
       return {
         id: item.pet.id,
@@ -267,8 +263,8 @@ export const CheckoutView: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { id: 'domestic' as const, title: 'Inside the USA', price: '+$100', desc: 'Express climate transport with a flight nanny.' },
-                { id: 'international' as const, title: 'Another country', price: '+$200', desc: 'Overseas customs handling and flight nanny escort.' }
+                { id: 'domestic' as const, title: 'Inside the USA', price: `+${formatPrice(DELIVERY_COST_USD.domestic)}`, desc: 'Express climate transport with a flight nanny.' },
+                { id: 'international' as const, title: 'Another country', price: `+${formatPrice(DELIVERY_COST_USD.international)}`, desc: 'Overseas customs handling and flight nanny escort.' }
               ].map(option => (
                 <label
                   key={option.id}

@@ -4,6 +4,7 @@ import { usePetStore } from '../context/PetStoreContext';
 import { mainPhotoOf } from '../lib/petImages';
 import { PetPhoto } from '../components/PetPhoto';
 import { SignInRequired } from '../components/SignInRequired';
+import { DELIVERY_COST_USD, addOnsTotalUSD, taxesUSD } from '../lib/pricing';
 
 export const CartView: React.FC = () => {
   const {
@@ -31,17 +32,12 @@ export const CartView: React.FC = () => {
   }
 
   const subtotal = cart.reduce((acc, item) => acc + item.pet.priceUSD, 0);
-  const addonsTotal = cart.reduce((acc, item) => {
-    let add = 0;
-    if (item.selectedAddOns.insurance) add += 25;
-    if (item.selectedAddOns.starterKit) add += 85;
-    if (item.selectedAddOns.vipTransport) add += 150;
-    return acc + add;
-  }, 0);
+  const addonsTotal = cart.reduce((acc, item) => acc + addOnsTotalUSD(item.selectedAddOns), 0);
 
-  // Matches the domestic rate in checkout; international destinations are $200.
-  const deliveryCost = cart.length > 0 ? 100 : 0;
-  const taxes = Math.round((subtotal + addonsTotal) * 0.08);
+  // Matches the domestic rate in checkout; international costs more and is
+  // picked there.
+  const deliveryCost = cart.length > 0 ? DELIVERY_COST_USD.domestic : 0;
+  const taxes = taxesUSD(subtotal + addonsTotal);
   const totalAmount = subtotal + addonsTotal + deliveryCost + taxes;
 
   if (cart.length === 0) {

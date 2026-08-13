@@ -70,7 +70,7 @@ async function startServer() {
 
       const formattedTotal = typeof totalAmount === 'number' ? `$${totalAmount.toLocaleString('en-US')}` : `$${totalAmount}`;
 
-      const emailSubject = `New order #${orderId} â€” ${formattedTotal} USD â€” ${customerName || 'Customer'}`;
+      const emailSubject = `New order #${orderId} — ${formattedTotal} USD — ${customerName || 'Customer'}`;
 
       // Build pet details list text
       let petsText = '';
@@ -138,7 +138,7 @@ Next Step                  : Customer confirms payment & shipment on WhatsApp
       const buyerBody = `
 Hello ${customerName || 'there'},
 
-Thank you â€” we have received your reservation request.
+Thank you — we have received your reservation request.
 
   Order reference : #${orderId}
   Total to settle : ${formattedTotal} USD
@@ -154,7 +154,7 @@ No payment is taken through this website.
 
 ${WHATSAPP_LINK}
 
-â€” The YourPets concierge team
+— The YourPets concierge team
 `.trim();
 
       console.log(`\nNew order #${orderId} (${formattedTotal}) from ${customerName || 'customer'}\n`);

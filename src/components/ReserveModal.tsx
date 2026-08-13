@@ -5,6 +5,7 @@ import { mainPhotoOf } from '../lib/petImages';
 import { PetPhoto } from './PetPhoto';
 import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
 import { sendOrderEmail } from '../lib/orderEmail';
+import { RESERVATION_DEPOSIT_USD } from '../lib/pricing';
 
 export const ReserveModal: React.FC = () => {
   const {
@@ -26,7 +27,7 @@ export const ReserveModal: React.FC = () => {
 
   if (!isReserveModalOpen || !pet) return null;
 
-  const depositAmount = 50;
+  const depositAmount = RESERVATION_DEPOSIT_USD;
 
   const handleSubmitReserve = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +45,8 @@ export const ReserveModal: React.FC = () => {
         customerName: customerName || 'Valued Client',
         deliveryAddress: deliveryAddress || '',
         phone: phone || '',
-        paymentMethod: `Reservation hold ($${depositAmount} refundable)`,
+        // Orders settle in USD whatever currency the site is displaying in.
+        paymentMethod: `Reservation hold ($${depositAmount} USD refundable)`,
         depositPaid: false,
         depositAmount
       });
@@ -65,7 +67,7 @@ export const ReserveModal: React.FC = () => {
 
     window.open(
       whatsappLink(
-        `Hello YourPets, I would like to hold the ${pet.breed} (listing ${pet.id}) with the $${depositAmount} refundable deposit. My order number is ${order.id}.`
+        `Hello YourPets, I would like to hold the ${pet.breed} (listing ${pet.id}) with the $${depositAmount} USD refundable deposit. My order number is ${order.id}.`
       ),
       '_blank',
       'noopener,noreferrer'
@@ -98,7 +100,7 @@ export const ReserveModal: React.FC = () => {
               <h4 className="font-bold text-sm text-on-surface">{pet.breed}</h4>
               <p className="text-on-surface-variant">Full Price: <strong>{formatPrice(pet.priceUSD)}</strong></p>
               <p className="text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" /> Deposit: $50 (Fully Refundable)
+                <Clock className="w-3.5 h-3.5" /> Deposit: {formatPrice(depositAmount)} (Fully Refundable)
               </p>
             </div>
           </div>
@@ -157,7 +159,7 @@ export const ReserveModal: React.FC = () => {
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-2">
             <Lock className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
             <p>
-              A ${depositAmount} refundable deposit holds this {pet.breed} for 7 days. We confirm the deposit and the delivery
+              A {formatPrice(depositAmount)} refundable deposit holds this {pet.breed} for 7 days. We confirm the deposit and the delivery
               schedule with you on WhatsApp ({WHATSAPP_DISPLAY}) — nothing is charged on this page.
             </p>
           </div>
