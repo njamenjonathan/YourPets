@@ -72,9 +72,17 @@ export const Header: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // A live query keeps the field unfurled even after focus moves away.
+  const isSearchOpen = isSearchExpanded || searchQuery.trim().length > 0;
+
   const cartItemsCount = cart.length;
   const wishlistCount = wishlist.length;
   const isAdmin = currentUser?.isLoggedIn && currentUser.role === 'admin';
+
+  // The row only has room for the full link set at lg. An unfurled search field
+  // or the extra signed-in link pushes it past that, so the drawer takes over
+  // until xl rather than letting the links run under the search.
+  const navNeedsXl = isSearchOpen || Boolean(currentUser?.isLoggedIn);
 
   // "My Orders" appears for signed-in customers only.
   const navLinks = currentUser?.isLoggedIn
@@ -128,10 +136,10 @@ export const Header: React.FC = () => {
       {/* Main App Navigation Bar */}
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3 lg:gap-4 xl:gap-6">
         {/* Left: Mobile Drawer Trigger + Brand Logo with divider */}
-        <div className="flex items-center gap-3 pr-3 lg:pr-5 border-r border-outline-variant/30 dark:border-outline-variant/10 shrink-0">
+        <div className={`flex items-center gap-3 pr-3 lg:pr-5 shrink-0 ${isSearchOpen ? 'max-md:pr-0 max-md:border-r-0' : ''} border-r border-outline-variant/30 dark:border-outline-variant/10`}>
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="liquid-glass liquid-pill lg:hidden p-2 text-[#002045] dark:text-white"
+            className={`liquid-glass liquid-pill ${navNeedsXl ? 'xl:hidden' : 'lg:hidden'} p-2 text-[#002045] dark:text-white`}
             id="mobile-menu-trigger"
             aria-expanded={isMobileMenuOpen}
             aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
@@ -152,9 +160,11 @@ export const Header: React.FC = () => {
             </span>
           </button>
 
+          {/* On a phone the unfurled field needs the whole bar, so the wordmark
+              steps aside rather than shoving the cart and account off-screen. */}
           <button
             onClick={() => setActiveTab('home')}
-            className="text-left group flex items-center gap-2.5"
+            className={`text-left group items-center gap-2.5 ${isSearchOpen ? 'hidden md:flex' : 'flex'}`}
             id="brand-logo"
           >
             <YourPetsWordmark
@@ -166,8 +176,13 @@ export const Header: React.FC = () => {
           </button>
         </div>
 
-        {/* Center: Primary Links (Desktop) */}
-        <nav className="hidden lg:flex items-center gap-3 xl:gap-6 2xl:gap-8 text-xs xl:text-sm font-medium shrink min-w-0">
+        {/* Center: Primary Links (Desktop)
+
+            The padding/negative-margin pair keeps the active tab's glass capsule
+            (which bleeds outside the button box) from being clipped by the
+            overflow rule, and the overflow rule is what stops the links from
+            spilling over the search field when the row runs out of room. */}
+        <nav className={`hidden ${navNeedsXl ? 'xl:flex' : 'lg:flex'} items-center gap-3 xl:gap-4 2xl:gap-8 text-xs 2xl:text-sm font-medium shrink-[0.05] min-w-0 overflow-x-auto no-scrollbar px-3 -mx-3 py-2 -my-2`}>
           {navLinks.map(link => (
             <button
               key={link.tab}
@@ -180,10 +195,15 @@ export const Header: React.FC = () => {
         </nav>
 
         {/* Right: Search, Wishlist, Cart & Profile Actions */}
-        <div className="flex items-center gap-2 xl:gap-3 shrink-0 ml-auto">
-          {/* Expandable Circular Search Bar */}
-          <div className="relative">
-            {!isSearchExpanded && searchQuery.trim().length === 0 ? (
+        <div className="flex items-center gap-2 xl:gap-3 grow justify-end">
+          {/* Expandable Circular Search Bar.
+
+              Once unfurled the field grows into whatever space the row has left
+              over (`flex-1` starts it from a zero basis) instead of claiming a
+              fixed width the nav then has to give up, so it can never grow
+              across the links. */}
+          <div className={isSearchOpen ? 'relative flex-1 min-w-24 max-w-60' : 'relative shrink-0'}>
+            {!isSearchOpen ? (
               <button
                 onClick={() => {
                   setIsSearchExpanded(true);
@@ -196,7 +216,7 @@ export const Header: React.FC = () => {
                 <Search className="w-4 h-4 text-outline" />
               </button>
             ) : (
-              <div className="liquid-glass liquid-pill liquid-search relative flex items-center w-48 sm:w-56 lg:w-60">
+              <div className="liquid-glass liquid-pill liquid-search relative flex items-center w-full">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none" />
                 <input
                   ref={searchInputRef}
