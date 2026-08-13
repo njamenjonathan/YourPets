@@ -4,6 +4,7 @@ import { usePetStore } from '../context/PetStoreContext';
 import { mainPhotoOf, photosFor } from '../lib/petImages';
 import { PetPhoto, Avatar } from '../components/PetPhoto';
 import { WHATSAPP_DISPLAY, whatsappLink } from '../lib/contact';
+import { ADDON_PRICES_USD, RESERVATION_DEPOSIT_USD, addOnsTotalUSD } from '../lib/pricing';
 
 export const PetDetailView: React.FC = () => {
   const {
@@ -82,13 +83,7 @@ export const PetDetailView: React.FC = () => {
     if (currentUser?.isLoggedIn) setActiveTab('checkout');
   };
 
-  const calculateTotalPrice = () => {
-    let total = pet.priceUSD;
-    if (selectedAddons.insurance) total += 25;
-    if (selectedAddons.starterKit) total += 85;
-    if (selectedAddons.vipTransport) total += 150;
-    return total;
-  };
+  const calculateTotalPrice = () => pet.priceUSD + addOnsTotalUSD(selectedAddons);
 
   return (
     <div className="space-y-12 animate-fade-in pb-16">
@@ -214,7 +209,7 @@ export const PetDetailView: React.FC = () => {
                   <p className="text-[11px] text-on-surface-variant">Covers accidents & illness emergencies</p>
                 </div>
               </div>
-              <span className="font-bold text-[#002045] dark:text-emerald-400">+$25</span>
+              <span className="font-bold text-[#002045] dark:text-emerald-400">+{formatPrice(ADDON_PRICES_USD.insurance)}</span>
             </label>
 
             <label className="flex items-center justify-between p-3.5 rounded-2xl border border-outline-variant/40 bg-white dark:bg-[#1f2226] cursor-pointer text-xs">
@@ -230,7 +225,7 @@ export const PetDetailView: React.FC = () => {
                   <p className="text-[11px] text-on-surface-variant">Royal Canin food, plush toy & blanket</p>
                 </div>
               </div>
-              <span className="font-bold text-[#002045] dark:text-emerald-400">+$85</span>
+              <span className="font-bold text-[#002045] dark:text-emerald-400">+{formatPrice(ADDON_PRICES_USD.starterKit)}</span>
             </label>
 
             <label className="flex items-center justify-between p-3.5 rounded-2xl border border-outline-variant/40 bg-white dark:bg-[#1f2226] cursor-pointer text-xs">
@@ -246,7 +241,7 @@ export const PetDetailView: React.FC = () => {
                   <p className="text-[11px] text-on-surface-variant">Escorted in cabin directly to your airport</p>
                 </div>
               </div>
-              <span className="font-bold text-[#002045] dark:text-emerald-400">+$150</span>
+              <span className="font-bold text-[#002045] dark:text-emerald-400">+{formatPrice(ADDON_PRICES_USD.vipTransport)}</span>
             </label>
           </div>
 
@@ -282,7 +277,7 @@ export const PetDetailView: React.FC = () => {
               className="w-full text-[11px] font-bold text-on-surface-variant hover:text-[#002045] dark:hover:text-white transition-colors underline underline-offset-2"
               id="reserve-deposit-btn"
             >
-              Not ready yet? Hold this {pet.species === 'dog' ? 'puppy' : 'kitten'} for 7 days with a $50 refundable deposit
+              Not ready yet? Hold this {pet.species === 'dog' ? 'puppy' : 'kitten'} for 7 days with a {formatPrice(RESERVATION_DEPOSIT_USD)} refundable deposit
             </button>
 
             <p className="text-[11px] text-on-surface-variant text-center leading-relaxed">

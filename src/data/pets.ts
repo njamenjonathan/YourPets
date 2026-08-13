@@ -1133,11 +1133,11 @@ export const SAMPLE_FAQS = [
     a: 'Yes. Every puppy and kitten has a comprehensive health check by a licensed veterinarian, is up to date on age-appropriate vaccinations, dewormed, and microchipped before delivery.'
   },
   {
-    q: 'Why are prices between $150 and $300?',
-    a: 'We work directly with certified breeders, so there is no middle mark-up. Every standard and rare baby pet on the site is priced between $150 and $300.'
+    q: 'Why are prices between $150 and $300 USD?',
+    a: 'We work directly with certified breeders, so there is no middle mark-up. Every standard and rare baby pet on the site is priced between $150 and $300 USD. Prices shown elsewhere on the site are converted into the currency you pick in the header.'
   },
   {
     q: 'How much is delivery?',
-    a: 'Delivery within the USA is $100. International or overseas delivery is $200, which covers the customs paperwork and flight nanny escort.'
+    a: 'Delivery within the USA is $100 USD. International or overseas delivery is $200 USD, which covers the customs paperwork and flight nanny escort.'
   }
 ];

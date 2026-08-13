@@ -1,6 +1,7 @@
 ﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Pet, CartItem, FilterState, Order, Currency, Breeder, UserAccount } from '../types';
 import { SAMPLE_PETS, SAMPLE_BREEDERS } from '../data/pets';
+import { addOnsTotalUSD, taxesUSD, DELIVERY_COST_USD } from '../lib/pricing';
 import {
   auth,
   db,
@@ -51,8 +52,8 @@ const toUserAccount = (fbUser: { uid: string; email: string | null; displayName:
 };
 
 /**
- * What a customer sees for each Firebase error, plus â€” for the failures that
- * only a developer can fix â€” a precise note in the console saying what to do.
+ * What a customer sees for each Firebase error, plus — for the failures that
+ * only a developer can fix — a precise note in the console saying what to do.
  * Every case gets its own message; nothing falls back to a generic one except
  * genuinely unknown codes.
  */
@@ -66,7 +67,7 @@ const AUTH_MESSAGES: Record<string, string> = {
   'auth/invalid-credential': 'Email or password is incorrect. If you have not registered yet, use "Create Account".',
   'auth/invalid-login-credentials': 'Email or password is incorrect. If you have not registered yet, use "Create Account".',
   'auth/email-already-in-use': 'An account with this email already exists. Please sign in instead, or use "Forgot password?".',
-  'auth/weak-password': 'Please choose a longer password â€” at least 6 characters.',
+  'auth/weak-password': 'Please choose a longer password — at least 6 characters.',
   'auth/user-disabled': 'This account has been disabled. Please contact us on WhatsApp.',
   'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
   'auth/network-request-failed': 'Network problem. Check your connection and try again.',
@@ -118,8 +119,8 @@ const AUTH_SETUP_HELP: Record<string, string> = {
 
 /**
  * Finds the entry for a code. Firebase sometimes appends the server text to the
- * code itself â€” a bad key arrives as
- * "auth/api-key-not-valid.-please-pass-a-valid-api-key." â€” so an exact lookup
+ * code itself — a bad key arrives as
+ * "auth/api-key-not-valid.-please-pass-a-valid-api-key." — so an exact lookup
  * is not enough; fall back to the longest matching prefix.
  */
 const lookupByCode = <T,>(table: Record<string, T>, code: string): T | undefined => {
@@ -145,7 +146,7 @@ const authErrorMessage = (err: unknown): string => {
   if (message) return message;
 
   if (!firebaseSetup.looksConfigured) {
-    console.error('[YourPets auth] Firebase settings are missing or placeholders â€” see src/lib/firebase.ts.');
+    console.error('[YourPets auth] Firebase settings are missing or placeholders — see src/lib/firebase.ts.');
     return 'Sign-in is not available right now. Please contact us on WhatsApp.';
   }
 
@@ -153,12 +154,32 @@ const authErrorMessage = (err: unknown): string => {
   return (err as { message?: string })?.message || 'Something went wrong. Please try again.';
 };
 
+const CURRENCY_STORAGE_KEY = 'yourpets_currency';
+
 const CURRENCY_RATES: Record<Currency, { symbol: string; rate: number }> = {
   USD: { symbol: '$', rate: 1.0 },
-  EUR: { symbol: 'â‚¬', rate: 0.92 },
-  GBP: { symbol: 'Â£', rate: 0.78 },
+  EUR: { symbol: '€', rate: 0.92 },
+  GBP: { symbol: '£', rate: 0.78 },
   CAD: { symbol: 'CA$', rate: 1.36 },
   AUD: { symbol: 'AU$', rate: 1.52 }
+};
+
+const readStoredCurrency = (): Currency => {
+  const stored = localStorage.getItem(CURRENCY_STORAGE_KEY);
+  return stored && stored in CURRENCY_RATES ? (stored as Currency) : 'USD';
+};
+
+/**
+ * Renders a USD amount in the currency the shopper picked. Every price the site
+ * shows goes through here, so a page never mixes a converted total with a
+ * hardcoded dollar figure.
+ */
+const formatPriceIn = (currency: Currency, priceUSD: number): string => {
+  const { symbol, rate } = CURRENCY_RATES[currency];
+  const converted = Math.round(priceUSD * rate);
+  // Grouping is pinned to en-US so it always matches the leading symbol; the
+  // visitor's OS locale would otherwise render "€1.234" next to "$1,234".
+  return `${symbol}${converted.toLocaleString('en-US')}`;
 };
 
 interface PetStoreContextType {
@@ -248,7 +269,7 @@ const PetStoreContext = createContext<PetStoreContextType | undefined>(undefined
 export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [pets, setPets] = useState<Pet[]>(() => dedupePets(SAMPLE_PETS));
   const [breeders] = useState<Breeder[]>(SAMPLE_BREEDERS);
-  const [currency, setCurrency] = useState<Currency>('USD');
+  const [currency, setCurrency] = useState<Currency>(readStoredCurrency);
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -327,6 +348,12 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
+
+  // Keep the shopper's chosen currency across reloads instead of snapping back
+  // to USD mid-purchase.
+  useEffect(() => {
+    localStorage.setItem(CURRENCY_STORAGE_KEY, currency);
+  }, [currency]);
 
   const setActiveTab = (tab: string) => {
     setActiveTabState(tab);
@@ -440,7 +467,7 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
    */
   useEffect(() => {
     if (!currentUser?.isLoggedIn) {
-      // Signed out (or between accounts) â€” drop the previous member's orders.
+      // Signed out (or between accounts) — drop the previous member's orders.
       setOrders([]);
       return;
     }
@@ -604,17 +631,12 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const placeOrder = (details: Partial<Order>): Order => {
     const mainPet = cart[0]?.pet || pets[0];
     const subtotal = cart.reduce((acc, item) => acc + item.pet.priceUSD, 0);
-    const addonsTotal = cart.reduce((acc, item) => {
-      let add = 0;
-      if (item.selectedAddOns.insurance) add += 25;
-      if (item.selectedAddOns.starterKit) add += 85;
-      if (item.selectedAddOns.vipTransport) add += 150;
-      return acc + add;
-    }, 0);
-    
-    // Dynamic Location Pricing: $100 for Same Country (USA), $200 for Overseas/International
-    const deliveryCost = details.deliveryCost !== undefined ? details.deliveryCost : 100;
-    const taxes = Math.round((subtotal + addonsTotal) * 0.08);
+    const addonsTotal = cart.reduce((acc, item) => acc + addOnsTotalUSD(item.selectedAddOns), 0);
+
+    // Dynamic location pricing, in USD: domestic for the same country (USA),
+    // international for overseas.
+    const deliveryCost = details.deliveryCost !== undefined ? details.deliveryCost : DELIVERY_COST_USD.domestic;
+    const taxes = taxesUSD(subtotal + addonsTotal);
     const totalAmount = subtotal + addonsTotal + deliveryCost + taxes;
 
     const newOrder: Order = {
@@ -672,15 +694,11 @@ export const PetStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     clearCart();
     setSelectedOrder(newOrder);
-    showNotification(`Order #${newOrder.id} placed! Confirmation of your $${totalAmount} total is on its way to you.`);
+    showNotification(`Order #${newOrder.id} placed! Confirmation of your ${formatPriceIn(currency, totalAmount)} total is on its way to you.`);
     return newOrder;
   };
 
-  const formatPrice = (priceUSD: number): string => {
-    const { symbol, rate } = CURRENCY_RATES[currency];
-    const converted = Math.round(priceUSD * rate);
-    return `${symbol}${converted.toLocaleString()}`;
-  };
+  const formatPrice = (priceUSD: number): string => formatPriceIn(currency, priceUSD);
 
   const formatAge = (months: number): string => {
     if (months < 1) return '3 Weeks Old';
