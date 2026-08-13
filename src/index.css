@@ -864,6 +864,17 @@
     transform: scaleX(1);
   }
 
+  /* The desktop nav scrolls rather than spilling when the row is tight, and the
+     scrollbar itself would sit across the glass, so it stays hidden. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   /* The active tab's glass capsule. It scales up from the centre when the tab
      becomes current, so the highlight looks like it flows between items. */
   .liquid-tab {
