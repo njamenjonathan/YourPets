@@ -82,7 +82,7 @@ export const Header: React.FC = () => {
     : NAV_LINKS;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#f9f9f9]/90 dark:bg-[#1a1c1e]/90 backdrop-blur-xl border-b border-outline-variant/30 dark:border-outline-variant/10 transition-colors">
+    <header className="liquid-glass liquid-header fixed top-0 left-0 right-0 z-50">
       {/* Top Banner / Utility Bar */}
       <div className="bg-[#002045] text-white text-xs py-2 px-4 md:px-8 flex justify-between items-center font-medium">
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
@@ -131,10 +131,25 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-3 pr-3 lg:pr-5 border-r border-outline-variant/30 dark:border-outline-variant/10 shrink-0">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 text-[#002045] dark:text-white hover:bg-surface-variant/50 rounded-full transition-colors"
+            className="liquid-glass liquid-pill lg:hidden p-2 text-[#002045] dark:text-white"
             id="mobile-menu-trigger"
+            aria-expanded={isMobileMenuOpen}
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
           >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {/* The two icons cross-fade and counter-rotate so the control
+                morphs rather than swapping glyphs. */}
+            <span className="relative block w-6 h-6">
+              <Menu
+                className={`absolute inset-0 w-6 h-6 transition-all duration-300 ${
+                  isMobileMenuOpen ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'
+                }`}
+              />
+              <X
+                className={`absolute inset-0 w-6 h-6 transition-all duration-300 ${
+                  isMobileMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'
+                }`}
+              />
+            </span>
           </button>
 
           <button
@@ -157,7 +172,7 @@ export const Header: React.FC = () => {
             <button
               key={link.tab}
               onClick={() => setActiveTab(link.tab)}
-              className={`whitespace-nowrap shrink-0 no-press ${activeTab === link.tab ? 'text-[#002045] dark:text-white font-bold border-b-2 border-[#002045] dark:border-white pb-1' : 'nav-link text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
+              className={`liquid-tab whitespace-nowrap shrink-0 no-press ${activeTab === link.tab ? 'is-active text-[#002045] dark:text-white font-bold' : 'nav-link text-on-surface-variant hover:text-[#002045] dark:hover:text-white'}`}
             >
               {link.label}
             </button>
@@ -174,14 +189,14 @@ export const Header: React.FC = () => {
                   setIsSearchExpanded(true);
                   setTimeout(() => searchInputRef.current?.focus(), 50);
                 }}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border border-outline-variant/60 bg-white dark:bg-[#282c31] text-[#002045] dark:text-white hover:border-[#002045] dark:hover:border-white hover:bg-surface-low transition-all shadow-sm shrink-0"
+                className="liquid-glass liquid-pill w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-[#002045] dark:text-white shrink-0"
                 title="Search breeds..."
                 id="search-icon-circle-btn"
               >
                 <Search className="w-4 h-4 text-outline" />
               </button>
             ) : (
-              <div className="relative flex items-center w-48 sm:w-56 lg:w-60 transition-all duration-300 ease-in-out">
+              <div className="liquid-glass liquid-pill liquid-search relative flex items-center w-48 sm:w-56 lg:w-60">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none" />
                 <input
                   ref={searchInputRef}
@@ -204,7 +219,7 @@ export const Header: React.FC = () => {
                       }
                     }, 200);
                   }}
-                  className="w-full pl-9 pr-8 py-2 rounded-full text-xs border border-outline-variant/60 bg-white dark:bg-[#282c31] text-on-surface focus:outline-none focus:border-[#002045] dark:focus:border-white transition-all shadow-sm"
+                  className="w-full bg-transparent border-none pl-9 pr-8 py-2 text-xs text-on-surface placeholder:text-outline focus:outline-none"
                   autoFocus
                 />
                 <button
@@ -221,7 +236,7 @@ export const Header: React.FC = () => {
 
                 {/* AI Search Suggestions Dropdown */}
                 {isSearchFocused && aiSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1f2226] rounded-xl shadow-xl border border-outline-variant/30 p-2 z-50 text-xs">
+                  <div className="liquid-glass liquid-glass-nested liquid-pop absolute top-full left-0 right-0 mt-2 rounded-2xl p-2 z-50 text-xs">
                     <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 px-2 py-1">
                       <Sparkles className="w-3 h-3" /> AI Smart Suggestions
                     </div>
@@ -252,10 +267,10 @@ export const Header: React.FC = () => {
                 setActiveTab('wishlist');
               }
             }}
-            className={`relative flex items-center gap-1.5 px-3 py-2 rounded-full transition-colors border shrink-0 ${
+            className={`liquid-glass liquid-pill relative flex items-center gap-1.5 px-3 py-2 shrink-0 ${
               activeTab === 'wishlist'
-                ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 text-rose-700 dark:text-rose-300 font-bold'
-                : 'border-outline-variant/30 hover:bg-surface-low dark:hover:bg-surface-high text-[#002045] dark:text-white'
+                ? 'liquid-tint-rose text-rose-700 dark:text-rose-200 font-bold'
+                : 'text-[#002045] dark:text-white'
             }`}
             title="View Wishlist"
             id="wishlist-nav-btn"
@@ -278,7 +293,7 @@ export const Header: React.FC = () => {
                 setActiveTab('cart');
               }
             }}
-            className="relative p-2 rounded-full bg-[#002045] text-white hover:bg-[#1a365d] transition-colors flex items-center gap-1.5 px-3.5 py-2 shadow-sm shrink-0"
+            className="liquid-glass liquid-pill liquid-sheen liquid-tint-primary relative text-white flex items-center gap-1.5 px-3.5 py-2 shrink-0"
             id="cart-nav-btn"
           >
             <ShoppingBag className="w-4 h-4" />
@@ -299,10 +314,10 @@ export const Header: React.FC = () => {
                 setActiveTab('dashboard');
               }
             }}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shrink-0 ${
+            className={`liquid-glass liquid-pill flex items-center gap-1.5 px-3 py-2 shrink-0 ${
               currentUser?.isLoggedIn
-                ? 'border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
-                : 'border-outline-variant/40 hover:bg-surface-low dark:hover:bg-surface-high text-[#002045] dark:text-white'
+                ? 'liquid-tint-emerald text-emerald-900 dark:text-emerald-200'
+                : 'text-[#002045] dark:text-white'
             }`}
             title="My Account & VIP Portal"
             id="account-nav-btn"
@@ -317,7 +332,7 @@ export const Header: React.FC = () => {
           {isAdmin && (
             <button
               onClick={() => setActiveTab('admin')}
-              className="hidden xl:inline-block text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2.5 py-1 rounded-full border border-amber-300 dark:border-amber-700 shrink-0"
+              className="liquid-glass liquid-pill liquid-tint-amber hidden xl:inline-block text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 px-2.5 py-1 shrink-0"
             >
               Admin
             </button>
@@ -327,7 +342,7 @@ export const Header: React.FC = () => {
 
       {/* Mobile Sidebar Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden border-t border-outline-variant/30 bg-[#f9f9f9] dark:bg-[#1a1c1e] px-6 py-6 space-y-4 font-medium text-sm">
+        <div className="liquid-glass liquid-glass-nested liquid-sheet lg:hidden border-x-0 border-b-0 rounded-none px-6 py-6 space-y-4 font-medium text-sm">
           {/* Mobile Search Bar */}
           <div className="relative mb-4">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-outline" />
@@ -339,7 +354,7 @@ export const Header: React.FC = () => {
                 setSearchQuery(e.target.value);
                 if (activeTab !== 'browse') setActiveTab('browse');
               }}
-              className="w-full pl-9 pr-4 py-2.5 rounded-full text-xs border border-outline-variant bg-white dark:bg-[#282c31]"
+              className="liquid-glass liquid-pill w-full pl-9 pr-4 py-2.5 text-xs text-on-surface focus:outline-none"
             />
           </div>
 
@@ -348,14 +363,16 @@ export const Header: React.FC = () => {
               <button
                 key={link.tab}
                 onClick={() => { setActiveTab(link.tab); setIsMobileMenuOpen(false); }}
-                className="text-left py-2 px-3 rounded-lg hover:bg-surface-low dark:hover:bg-surface-high"
+                className={`liquid-glass liquid-lift text-left py-2 px-3 rounded-xl ${
+                  activeTab === link.tab ? 'liquid-tint-primary text-white font-bold' : ''
+                }`}
               >
                 {link.label}
               </button>
             ))}
             <button
               onClick={() => { setActiveTab('dashboard'); setIsMobileMenuOpen(false); }}
-              className="text-left py-2 px-3 rounded-lg hover:bg-surface-low dark:hover:bg-surface-high"
+              className="liquid-glass liquid-lift text-left py-2 px-3 rounded-xl"
             >
               My Account
             </button>
@@ -364,14 +381,14 @@ export const Header: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2 pt-2">
             <button
               onClick={() => { setIsBreedIdentifierOpen(true); setIsMobileMenuOpen(false); }}
-              className="flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-600 px-4 py-2 rounded-full"
+              className="liquid-glass liquid-pill liquid-sheen liquid-tint-secondary flex items-center gap-1.5 text-xs font-bold text-white px-4 py-2"
             >
               <Camera className="w-4 h-4" /> Photo Breed Scan
             </button>
 
             <button
               onClick={() => { setIsQuizOpen(true); setIsMobileMenuOpen(false); }}
-              className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-4 py-2 rounded-full"
+              className="liquid-glass liquid-pill liquid-tint-emerald flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 px-4 py-2"
             >
               <Sparkles className="w-4 h-4" /> AI Match
             </button>
@@ -379,7 +396,7 @@ export const Header: React.FC = () => {
             {isAdmin && (
               <button
                 onClick={() => { setActiveTab('admin'); setIsMobileMenuOpen(false); }}
-                className="text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-4 py-2 rounded-full"
+                className="liquid-glass liquid-pill liquid-tint-amber text-xs font-bold text-amber-800 dark:text-amber-300 px-4 py-2"
               >
                 Admin
               </button>

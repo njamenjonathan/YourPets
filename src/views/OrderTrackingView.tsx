@@ -30,7 +30,7 @@ export const OrderTrackingView: React.FC = () => {
         <div className="p-8 rounded-3xl bg-[#002045] text-white">
           <h1 className="font-serif-display font-bold text-3xl">Live Transport & Order Tracking</h1>
         </div>
-        <div className="p-16 text-center bg-white dark:bg-[#1f2226] rounded-3xl border border-outline-variant/30 space-y-4">
+        <div className="p-16 text-center liquid-glass liquid-glass-strong rounded-3xl space-y-4">
           <Clock className="w-16 h-16 mx-auto text-outline" />
           <h3 className="font-serif-display font-bold text-2xl text-on-surface">No Active Transport Orders</h3>
           <p className="text-xs text-on-surface-variant max-w-sm mx-auto">
@@ -99,7 +99,7 @@ export const OrderTrackingView: React.FC = () => {
       </div>
 
       {/* Progress Timeline */}
-      <div className="p-8 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-8 shadow-sm">
+      <div className="p-8 rounded-3xl liquid-glass liquid-glass-strong space-y-8">
         <h3 className="font-serif-display font-bold text-xl text-on-surface">Live Transport Progress</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
@@ -120,7 +120,7 @@ export const OrderTrackingView: React.FC = () => {
       {/* Details Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Companion Details */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4">
+        <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-4">
           <h3 className="font-serif-display font-bold text-lg text-on-surface">Companion Information</h3>
           <div className="flex items-center gap-4">
             <PetPhoto src={mainPhotoOf(currentOrder.pet)} alt={currentOrder.pet.breed} className="w-20 h-20 rounded-2xl object-cover shrink-0" />
@@ -133,7 +133,7 @@ export const OrderTrackingView: React.FC = () => {
         </div>
 
         {/* Downloads & Health Records */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4">
+        <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-4">
           <h3 className="font-serif-display font-bold text-lg text-on-surface">Official Veterinary Certificates</h3>
           <div className="space-y-2 text-xs">
             <button

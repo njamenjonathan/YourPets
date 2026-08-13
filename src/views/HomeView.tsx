@@ -46,7 +46,7 @@ export const HomeView: React.FC = () => {
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#002045] via-[#04305f] to-emerald-950 text-white my-4 shadow-2xl">
         <div className="relative z-20 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center px-6 py-16 md:py-20 md:px-12">
         <div className="lg:col-span-7 space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-emerald-300">
+          <div className="liquid-glass liquid-glass-onDark liquid-shimmer inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-300">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             100% Health Certified & Ethically Bred Companions
           </div>
@@ -62,7 +62,7 @@ export const HomeView: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               onClick={() => handleCategoryClick('dog')}
-              className="bg-white text-[#002045] px-6 py-3.5 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-emerald-50 transition-all shadow-lg flex items-center gap-2"
+              className="liquid-glass liquid-pill liquid-sheen liquid-tint-light text-[#002045] px-6 py-3.5 font-bold text-xs uppercase tracking-wider flex items-center gap-2"
               id="hero-shop-puppies-btn"
             >
               Shop Puppies <ArrowRight className="w-4 h-4" />
@@ -70,7 +70,7 @@ export const HomeView: React.FC = () => {
 
             <button
               onClick={() => handleCategoryClick('cat')}
-              className="bg-emerald-600 text-white px-6 py-3.5 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-lg flex items-center gap-2"
+              className="liquid-glass liquid-pill liquid-sheen liquid-tint-secondary text-white px-6 py-3.5 font-bold text-xs uppercase tracking-wider flex items-center gap-2"
               id="hero-shop-kittens-btn"
             >
               Shop Kittens <ArrowRight className="w-4 h-4" />
@@ -78,7 +78,7 @@ export const HomeView: React.FC = () => {
 
             <button
               onClick={() => setIsBreedIdentifierOpen(true)}
-              className="bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border border-emerald-400/40 px-6 py-3.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all shadow-lg flex items-center gap-2"
+              className="liquid-glass liquid-pill liquid-sheen liquid-glass-onDark text-emerald-200 px-6 py-3.5 font-bold text-xs uppercase tracking-wider flex items-center gap-2"
               id="hero-photo-scan-btn"
             >
               <Camera className="w-4 h-4 text-emerald-300" /> Photo Breed Scan
@@ -115,7 +115,7 @@ export const HomeView: React.FC = () => {
                 key={photo.alt}
                 src={photo.src}
                 alt={photo.alt}
-                className="aspect-square w-full rounded-3xl object-cover shadow-xl ring-1 ring-white/15"
+                className="liquid-float aspect-square w-full rounded-3xl object-cover shadow-xl ring-1 ring-white/15"
               />
             ))}
           </div>
@@ -123,7 +123,7 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* 2. Category Bento Grid */}
-      <section className="space-y-6">
+      <section className="reveal space-y-6">
         <div className="text-center space-y-2 max-w-xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-widest text-emerald-600">Curated Collections</span>
           <h2 className="font-serif-display font-bold text-3xl md:text-4xl text-on-surface">Explore Pet Categories</h2>
@@ -134,7 +134,7 @@ export const HomeView: React.FC = () => {
           {/* Category 1: Puppies */}
           <div
             onClick={() => handleCategoryClick('dog', 'standard')}
-            className="group relative h-72 rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all"
+            className="group liquid-lift relative h-72 rounded-3xl overflow-hidden cursor-pointer shadow-md"
           >
             <PetPhoto
               src={puppiesPhoto}
@@ -154,7 +154,7 @@ export const HomeView: React.FC = () => {
           {/* Category 2: Kittens */}
           <div
             onClick={() => handleCategoryClick('cat', 'standard')}
-            className="group relative h-72 rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all"
+            className="group liquid-lift relative h-72 rounded-3xl overflow-hidden cursor-pointer shadow-md"
           >
             <PetPhoto
               src={kittensPhoto}
@@ -174,7 +174,7 @@ export const HomeView: React.FC = () => {
           {/* Category 3: Rare Breeds */}
           <div
             onClick={() => handleCategoryClick(undefined, 'rare')}
-            className="group relative h-72 rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all"
+            className="group liquid-lift relative h-72 rounded-3xl overflow-hidden cursor-pointer shadow-md"
           >
             <PetPhoto
               src={rarePhoto}
@@ -196,7 +196,7 @@ export const HomeView: React.FC = () => {
           {/* Category 4: AI Match Quiz Banner */}
           <div
             onClick={() => setIsQuizOpen(true)}
-            className="relative h-72 rounded-3xl overflow-hidden cursor-pointer shadow-md bg-gradient-to-br from-[#002045] to-[#1a365d] text-white p-6 flex flex-col justify-between hover:scale-[1.02] transition-all border border-white/10"
+            className="liquid-glass liquid-sheen liquid-tint-primary liquid-lift relative h-72 rounded-3xl cursor-pointer text-white p-6 flex flex-col justify-between"
           >
             <div className="space-y-2">
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] uppercase">
@@ -210,7 +210,7 @@ export const HomeView: React.FC = () => {
               </p>
             </div>
 
-            <button className="bg-white text-[#002045] py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-50 transition-colors w-full text-center">
+            <button className="liquid-glass liquid-tint-light text-[#002045] py-3 rounded-xl font-bold text-xs uppercase tracking-wider w-full text-center">
               Start Quiz Now →
             </button>
           </div>
@@ -218,7 +218,7 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* 3. Featured Companions */}
-      <section className="space-y-6">
+      <section className="reveal space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-emerald-600">Handpicked Excellence</span>
@@ -240,7 +240,7 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* 4. Why Choose YourPets (Trust Badges) */}
-      <section className="space-y-8">
+      <section className="reveal space-y-8">
         <div className="text-center space-y-2 max-w-xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-widest text-emerald-600">The YourPets Promise</span>
           <h2 className="font-serif-display font-bold text-3xl md:text-4xl text-on-surface">Radical Transparency & Care</h2>
@@ -270,7 +270,7 @@ export const HomeView: React.FC = () => {
               desc: 'Climate-controlled ground transport or flight nanny escort cabin delivery directly to your home.'
             }
           ].map((item, i) => (
-            <div key={i} className="p-6 rounded-2xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-3 shadow-sm hover:shadow-md transition-shadow">
+            <div key={i} className="liquid-glass liquid-glass-strong liquid-lift liquid-sheen p-6 rounded-3xl space-y-3">
               <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 w-fit">
                 {item.icon}
               </div>
@@ -282,7 +282,7 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* 5. Real Customer Reviews */}
-      <section className="p-8 md:p-12 rounded-3xl bg-[#002045] text-white space-y-8">
+      <section className="reveal p-8 md:p-12 rounded-3xl bg-[#002045] text-white space-y-8">
         <div className="text-center space-y-2 max-w-xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-widest text-emerald-300">Verified Buyer Testimonials</span>
           <h2 className="font-serif-display font-bold text-3xl md:text-4xl">Stories from Happy Pet Parents</h2>
@@ -290,7 +290,7 @@ export const HomeView: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {SAMPLE_REVIEWS.map(r => (
-            <div key={r.id} className="p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 space-y-4 flex flex-col justify-between">
+            <div key={r.id} className="liquid-glass liquid-glass-onDark liquid-lift p-6 rounded-3xl space-y-4 flex flex-col justify-between">
               <div className="space-y-3">
                 <div className="flex items-center gap-1 text-amber-300">
                   {Array.from({ length: r.rating }).map((_, idx) => (

@@ -1,7 +1,9 @@
 import React from 'react';
 import { PetStoreProvider, usePetStore } from './context/PetStoreContext';
+import { useLiquidPointer, useScrollReveal } from './lib/useLiquidGlass';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { LiquidBackdrop } from './components/LiquidBackdrop';
 import { MobileBottomNav } from './components/MobileBottomNav';
 
 import { QuickViewModal } from './components/QuickViewModal';
@@ -28,6 +30,11 @@ import { ContactView } from './views/ContactView';
 
 const MainContent: React.FC = () => {
   const { activeTab, notification } = usePetStore();
+
+  // Glass surfaces catch the light where the pointer is, and sections resolve
+  // as they scroll in. Re-keyed on the tab so a freshly mounted view is seen.
+  useLiquidPointer();
+  useScrollReveal(activeTab);
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -64,11 +71,15 @@ const MainContent: React.FC = () => {
     }
   };
 
+  // The shell carries no background of its own: the body paints the base
+  // colour and the aurora sits above it, where the glass can sample it.
   return (
-    <div className="min-h-screen flex flex-col bg-[#f9f9f9] dark:bg-[#121417] text-[#1a1c1c] dark:text-[#f0f1f1] transition-colors">
+    <div className="min-h-screen flex flex-col text-[#1a1c1c] dark:text-[#f0f1f1] transition-colors">
+      <LiquidBackdrop />
+
       <Header />
 
-      <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 md:px-8 pt-24">
+      <main className="relative z-10 flex-1 max-w-[1280px] w-full mx-auto px-4 md:px-8 pt-24">
         <section key={activeTab} className="page-transition" aria-live="polite">
           {renderActiveTab()}
         </section>
@@ -87,7 +98,7 @@ const MainContent: React.FC = () => {
 
       {/* Global Notification Toast */}
       {notification && (
-        <div className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-[200] bg-[#002045] text-white px-6 py-3 rounded-full text-xs font-semibold shadow-2xl border border-white/20 animate-fade-in flex items-center gap-2">
+        <div className="liquid-glass liquid-toast fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-[200] text-white px-6 py-3 rounded-full text-xs font-semibold flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
           {notification}
         </div>

@@ -35,7 +35,7 @@ export const PetCard: React.FC<PetCardProps> = ({ pet }) => {
   };
 
   return (
-    <article className="bg-white dark:bg-[#1f2226] rounded-2xl border border-outline-variant/30 overflow-hidden card-elevation flex flex-col relative group">
+    <article className="liquid-glass liquid-glass-strong liquid-lift liquid-sheen rounded-3xl flex flex-col relative group">
       {/* Image Container */}
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-low dark:bg-surface-high cursor-pointer" onClick={handleClickCard}>
         <PetPhoto
@@ -61,20 +61,20 @@ export const PetCard: React.FC<PetCardProps> = ({ pet }) => {
           </div>
 
           {/* Verified Health Badge */}
-          <div className="bg-white/90 dark:bg-black/80 backdrop-blur-md rounded-full px-2.5 py-1 shadow-sm flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+          <div className="liquid-glass liquid-glass-soft rounded-full px-2.5 py-1 flex items-center gap-1 text-emerald-700 dark:text-emerald-300 font-semibold text-[11px]">
             <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 fill-emerald-600 text-white dark:text-black" />
             <span className="hidden sm:inline">Health Verified</span>
           </div>
         </div>
 
         {/* Quick View Floating Button */}
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 p-4 pointer-events-none">
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-[3px] backdrop-saturate-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center gap-2 p-4 pointer-events-none">
           <button
             onClick={(e) => {
               e.stopPropagation();
               setQuickViewPet(pet);
             }}
-            className="pointer-events-auto bg-white dark:bg-[#1f2226] text-[#002045] dark:text-white px-4 py-2 rounded-full font-semibold text-xs shadow-lg hover:bg-[#002045] hover:text-white transition-colors flex items-center gap-1.5 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
+            className="liquid-glass liquid-pill liquid-glass-strong pointer-events-auto text-[#002045] dark:text-white px-4 py-2 font-semibold text-xs flex items-center gap-1.5 translate-y-3 scale-95 group-hover:translate-y-0 group-hover:scale-100"
             id={`quickview-btn-${pet.id}`}
           >
             <Eye className="w-3.5 h-3.5" /> Quick View
@@ -87,10 +87,10 @@ export const PetCard: React.FC<PetCardProps> = ({ pet }) => {
             e.stopPropagation();
             toggleWishlist(pet.id);
           }}
-          className={`absolute bottom-3 right-3 p-2.5 rounded-full shadow-md backdrop-blur-md transition-all duration-200 ${
+          className={`liquid-glass liquid-pill absolute bottom-3 right-3 p-2.5 z-10 ${
             isWishlisted
-              ? 'bg-rose-500 text-white'
-              : 'bg-white/80 dark:bg-black/70 text-on-surface hover:bg-white hover:text-rose-500'
+              ? 'liquid-tint-rose-solid text-white liquid-pop-heart'
+              : 'text-on-surface hover:text-rose-500'
           }`}
           title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
         >
@@ -134,7 +134,7 @@ export const PetCard: React.FC<PetCardProps> = ({ pet }) => {
         <div className="pt-2 border-t border-outline-variant/20 flex items-center gap-2">
           <button
             onClick={handleClickCard}
-            className="flex-1 py-2.5 rounded-lg border border-outline-variant text-on-surface font-semibold text-xs tracking-wider uppercase hover:border-[#002045] hover:text-[#002045] dark:hover:border-white dark:hover:text-white transition-colors text-center"
+            className="liquid-glass flex-1 py-2.5 rounded-xl text-on-surface font-semibold text-xs tracking-wider uppercase hover:text-[#002045] dark:hover:text-white text-center"
             id={`view-details-${pet.id}`}
           >
             Details
@@ -142,7 +142,7 @@ export const PetCard: React.FC<PetCardProps> = ({ pet }) => {
 
           <button
             onClick={handleReserve}
-            className="flex-1 py-2.5 rounded-lg bg-[#002045] text-white font-semibold text-xs tracking-wider uppercase hover:bg-[#1a365d] transition-all shadow-sm hover:shadow-md text-center"
+            className="liquid-glass liquid-sheen liquid-tint-primary flex-1 py-2.5 rounded-xl text-white font-semibold text-xs tracking-wider uppercase text-center"
             id={`reserve-${pet.id}`}
           >
             Reserve

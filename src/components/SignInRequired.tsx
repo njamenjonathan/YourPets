@@ -18,7 +18,7 @@ export const SignInRequired: React.FC<SignInRequiredProps> = ({ title, message }
   // about to appear rather than an empty box or a premature "signed out".
   if (isAuthLoading) {
     return (
-      <div className="p-6 bg-white dark:bg-[#1f2226] rounded-3xl border border-outline-variant/30 space-y-4 shadow-sm">
+      <div className="p-6 liquid-glass liquid-glass-strong rounded-3xl space-y-4">
         <div className="flex items-center gap-2 text-xs text-on-surface-variant">
           <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
           Checking your session...
@@ -37,7 +37,7 @@ export const SignInRequired: React.FC<SignInRequiredProps> = ({ title, message }
   }
 
   return (
-    <div className="p-16 text-center bg-white dark:bg-[#1f2226] rounded-3xl border border-outline-variant/30 space-y-4 shadow-sm">
+    <div className="p-16 text-center liquid-glass liquid-glass-strong rounded-3xl space-y-4">
       <Lock className="w-14 h-14 mx-auto text-amber-500" />
       <h3 className="font-serif-display font-bold text-2xl text-on-surface">{title}</h3>
       <p className="text-xs text-on-surface-variant max-w-sm mx-auto leading-relaxed">{message}</p>

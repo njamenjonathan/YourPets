@@ -33,8 +33,8 @@ export const QuickViewModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm modal-backdrop">
-      <div className="relative w-full max-w-4xl bg-white dark:bg-[#1a1c1e] rounded-3xl shadow-2xl border border-outline-variant/30 overflow-hidden max-h-[90vh] flex flex-col md:flex-row modal-panel">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop">
+      <div className="relative w-full max-w-4xl liquid-glass liquid-glass-strong rounded-3xl overflow-hidden max-h-[90vh] flex flex-col md:flex-row modal-panel">
         {/* Close Button */}
         <button
           onClick={() => setQuickViewPet(null)}
@@ -53,7 +53,7 @@ export const QuickViewModal: React.FC = () => {
               priority
               className="w-full h-full object-cover transition-all duration-300"
             />
-            <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 rounded-full px-3 py-1 text-emerald-600 font-semibold text-xs flex items-center gap-1 shadow-sm">
+            <div className="liquid-glass liquid-glass-soft absolute top-3 left-3 rounded-full px-3 py-1 text-emerald-700 dark:text-emerald-300 font-semibold text-xs flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" /> Medical Cleared
             </div>
           </div>

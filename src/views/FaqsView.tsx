@@ -19,7 +19,7 @@ export const FaqsView: React.FC = () => {
         {SAMPLE_FAQS.map((faq, i) => {
           const isOpen = openIdx === i;
           return (
-            <div key={i} className="rounded-2xl border border-outline-variant/30 bg-white dark:bg-[#1f2226] overflow-hidden shadow-sm">
+            <div key={i} className="rounded-2xl liquid-glass liquid-glass-strong overflow-hidden">
               <button
                 onClick={() => setOpenIdx(isOpen ? null : i)}
                 className="w-full p-5 text-left flex justify-between items-center font-bold text-sm text-on-surface"

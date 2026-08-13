@@ -40,7 +40,7 @@ export const WishlistView: React.FC = () => {
       </div>
 
       {savedPets.length === 0 ? (
-        <div className="p-16 text-center bg-white dark:bg-[#1f2226] rounded-3xl border border-outline-variant/30 space-y-4">
+        <div className="p-16 text-center liquid-glass liquid-glass-strong rounded-3xl space-y-4">
           <Heart className="w-16 h-16 mx-auto text-outline" />
           <h3 className="font-serif-display font-bold text-2xl text-on-surface">Your Wishlist is Empty</h3>
           <p className="text-xs text-on-surface-variant max-w-sm mx-auto">

@@ -83,7 +83,7 @@ export const UserDashboardView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: My Orders */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
+          <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-4">
             <h3 className="font-serif-display font-bold text-xl text-on-surface flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-emerald-600" /> My Companion Orders & Reservations
             </h3>
@@ -124,7 +124,7 @@ export const UserDashboardView: React.FC = () => {
 
         {/* Right Column: Wishlist Preview & Account Quick Settings */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-4 shadow-sm">
+          <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-4">
             <h3 className="font-serif-display font-bold text-lg text-on-surface flex items-center gap-2">
               <Heart className="w-5 h-5 text-rose-500" /> Wishlist ({wishlistedPets.length})
             </h3>
@@ -149,7 +149,7 @@ export const UserDashboardView: React.FC = () => {
             </button>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-3 text-xs shadow-sm">
+          <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-3 text-xs">
             <div className="flex items-center gap-2 font-bold text-on-surface">
               <ShieldCheck className="w-4 h-4 text-emerald-600" /> Account Security Status
             </div>

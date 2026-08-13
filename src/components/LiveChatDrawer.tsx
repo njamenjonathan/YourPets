@@ -78,7 +78,7 @@ export const LiveChatDrawer: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-20 md:bottom-6 right-6 z-50 w-full max-w-sm bg-white dark:bg-[#1a1c1e] rounded-3xl shadow-2xl border border-outline-variant/30 overflow-hidden flex flex-col h-[480px] drawer-panel">
+    <div className="fixed bottom-20 md:bottom-6 right-6 z-50 w-full max-w-sm liquid-glass liquid-glass-strong rounded-3xl overflow-hidden flex flex-col h-[480px] drawer-panel">
       {/* Header */}
       <div className="p-4 bg-[#002045] text-white flex justify-between items-center">
         <div className="flex items-center gap-2.5">
@@ -132,7 +132,7 @@ export const LiveChatDrawer: React.FC = () => {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSendMessage} className="p-3 bg-white dark:bg-[#1a1c1e] border-t border-outline-variant/30 flex gap-2">
+      <form onSubmit={handleSendMessage} className="liquid-glass liquid-glass-nested p-3 border-x-0 border-b-0 rounded-none flex gap-2">
         <input
           type="text"
           value={inputText}

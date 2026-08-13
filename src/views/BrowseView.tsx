@@ -157,7 +157,7 @@ export const BrowseView: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar Filters */}
         <aside className="w-full lg:w-72 space-y-6 flex-shrink-0">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 space-y-6 shadow-sm">
+          <div className="p-6 rounded-3xl liquid-glass liquid-glass-strong space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-outline-variant/30">
               <h3 className="font-serif-display font-bold text-lg text-on-surface flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4 text-[#002045]" /> Filters
@@ -310,7 +310,7 @@ export const BrowseView: React.FC = () => {
         {/* Main Product Grid */}
         <main className="flex-1 space-y-6">
           {/* Top Sort Bar */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 rounded-2xl bg-white dark:bg-[#1f2226] border border-outline-variant/30 shadow-sm">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 rounded-2xl liquid-glass liquid-glass-strong">
             <span className="text-xs font-bold text-on-surface">
               Showing <strong>{filteredPets.length}</strong> available companion pets
             </span>
@@ -333,7 +333,7 @@ export const BrowseView: React.FC = () => {
 
           {/* Grid or Empty State */}
           {filteredPets.length === 0 ? (
-            <div className="p-12 text-center bg-white dark:bg-[#1f2226] rounded-3xl border border-outline-variant/30 space-y-4">
+            <div className="p-12 text-center liquid-glass liquid-glass-strong rounded-3xl space-y-4">
               <Search className="w-12 h-12 mx-auto text-outline" />
               <h3 className="font-serif-display font-bold text-xl text-on-surface">No matching companions found</h3>
               <p className="text-xs text-on-surface-variant max-w-sm mx-auto">
